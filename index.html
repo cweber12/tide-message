@@ -11,21 +11,21 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     :root {
-      --color-bg-primary: #f2f5f8;
+      --color-bg-primary: #eff4f7;
       --color-bg-secondary: #ffffff;
-      --color-bg-tertiary: #eaf0f5;
-      --color-text-primary: #13212e;
-      --color-text-secondary: #3f5366;
-      --color-border-primary: #c8d3de;
-      --color-border-focus: #0f6ea2;
-      --color-accent-primary: #0b5f89;
-      --color-accent-primary-hover: #0a547a;
-      --color-accent-secondary: #cc9b52;
-      --color-status-success: #1d6b54;
-      --color-status-warning: #8a661d;
-      --color-status-error: #a44740;
-      --shadow-sm: 0 1px 3px rgba(20, 35, 52, 0.09);
-      --shadow-md: 0 14px 28px rgba(20, 35, 52, 0.1);
+      --color-bg-tertiary: #edf2f6;
+      --color-text-primary: #142230;
+      --color-text-secondary: #44586c;
+      --color-border-primary: #c9d4dd;
+      --color-border-focus: #0f6ea3;
+      --color-accent-primary: #0b5f8a;
+      --color-accent-primary-hover: #0a5277;
+      --color-accent-secondary: #d39f57;
+      --color-status-success: #1e6d56;
+      --color-status-warning: #86611e;
+      --color-status-error: #9a403a;
+      --shadow-sm: 0 1px 3px rgba(20, 35, 52, 0.08);
+      --shadow-md: 0 16px 32px rgba(20, 35, 52, 0.08);
       --space-1: 4px;
       --space-2: 8px;
       --space-3: 12px;
@@ -33,12 +33,11 @@
       --space-5: 24px;
       --space-6: 32px;
       --radius-sm: 10px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --chart-height: 248px;
-      --chart-height-mobile: 220px;
-
-      /* Compatibility aliases used by existing script and markup */
+      --radius-md: 16px;
+      --radius-lg: 26px;
+      --chart-height: 240px;
+      --chart-height-compact: 178px;
+      --chart-height-mobile: 212px;
       --bg: var(--color-bg-primary);
       --surface: var(--color-bg-secondary);
       --surface-alt: var(--color-bg-tertiary);
@@ -46,7 +45,7 @@
       --muted: var(--color-text-secondary);
       --line: var(--color-border-primary);
       --brand: var(--color-accent-primary);
-      --brand-soft: #dbe8f1;
+      --brand-soft: #dce8f0;
       --accent: var(--color-accent-secondary);
       --good: var(--color-status-success);
       --maybe: var(--color-status-warning);
@@ -58,90 +57,222 @@
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
       color: var(--ink);
       background:
-        linear-gradient(180deg, rgba(11, 95, 137, 0.07), rgba(11, 95, 137, 0) 180px),
-        repeating-linear-gradient(90deg, transparent 0, transparent 77px, rgba(19, 33, 46, 0.03) 77px, rgba(19, 33, 46, 0.03) 78px),
-        var(--bg);
+        radial-gradient(circle at top left, rgba(11, 95, 138, 0.12), transparent 32%),
+        linear-gradient(180deg, #f7fafc 0%, #eff4f7 38%, #ebf0f4 100%);
       font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
       line-height: 1.55;
       font-size: 16px;
     }
 
-    .shell {
-      width: min(1240px, calc(100% - 26px));
-      margin: 0 auto;
-      padding: 24px 0 38px;
+    a {
+      color: var(--brand);
     }
 
-    header {
+    .page-shell {
+      width: min(1280px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 40px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.92);
       border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      display: grid;
+      gap: var(--space-5);
+      padding: clamp(22px, 4vw, 34px);
+      margin-bottom: var(--space-4);
       background:
-        linear-gradient(145deg, #ffffff, #f4f8fb),
-        linear-gradient(45deg, rgba(204, 155, 82, 0.1), rgba(11, 95, 137, 0.08));
-      box-shadow: var(--shadow);
-      padding: var(--space-5);
-      margin-bottom: var(--space-3);
+        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(243, 248, 251, 0.9)),
+        linear-gradient(90deg, rgba(11, 95, 138, 0.05), rgba(211, 159, 87, 0.04));
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 0, transparent calc(100% - 1px), rgba(20, 35, 52, 0.04) calc(100% - 1px)),
+        linear-gradient(0deg, transparent 0, transparent calc(100% - 1px), rgba(20, 35, 52, 0.04) calc(100% - 1px));
+      background-size: 104px 104px;
+      pointer-events: none;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent);
+    }
+
+    .hero-copy,
+    .hero-side {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: var(--space-2);
+      align-content: start;
+      padding: var(--space-4);
+      border: 1px solid rgba(169, 186, 200, 0.7);
+      border-radius: var(--radius-sm);
+      background: rgba(245, 249, 252, 0.88);
+    }
+
+    .hero-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-value {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.5rem, 3vw, 2.15rem);
+      line-height: 1.05;
     }
 
     .eyebrow {
       margin: 0;
       color: var(--brand);
       font-size: 0.78rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       font-weight: 600;
       font-family: "IBM Plex Mono", "Consolas", monospace;
     }
 
-    h1 {
-      margin: 8px 0 12px;
-      font-family: "Fraunces", Georgia, serif;
-      font-size: clamp(2rem, 5.4vw, 3.35rem);
-      line-height: 1.02;
-      letter-spacing: -0.012em;
-    }
-
-    .subtitle {
+    h1,
+    h2,
+    h3 {
       margin: 0;
-      color: var(--muted);
-      max-width: 68ch;
+      font-family: "Fraunces", Georgia, serif;
+      letter-spacing: -0.012em;
+      color: var(--ink);
     }
 
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--space-3);
-    }
-
-    .panel {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      padding: var(--space-4);
+    h1 {
+      margin-top: 10px;
+      font-size: clamp(2.1rem, 5vw, 3.7rem);
+      line-height: 0.98;
     }
 
     h2 {
-      margin: 0 0 10px;
-      font-size: 1.18rem;
-      letter-spacing: -0.004em;
-      font-family: "Fraunces", Georgia, serif;
-      font-weight: 600;
+      font-size: clamp(1.45rem, 2.8vw, 2rem);
+      line-height: 1.05;
     }
 
-    .controls-grid {
+    h3 {
+      font-size: 1.08rem;
+      line-height: 1.15;
+    }
+
+    .subtitle,
+    .subtitle-small,
+    .meta,
+    .small-note,
+    .warning-list {
+      color: var(--muted);
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      max-width: 68ch;
+    }
+
+    .subtitle-small {
+      margin: 8px 0 0;
+      max-width: 64ch;
+      font-size: 0.97rem;
+    }
+
+    .workspace {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 9px;
+      gap: var(--space-4);
     }
 
-    .control-row {
+    .left-rail,
+    .main-column {
+      min-width: 0;
+    }
+
+    .left-rail {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .nav-group {
       display: grid;
       gap: 6px;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 7px 0;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px solid transparent;
+      transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible {
+      color: var(--brand);
+      border-color: rgba(11, 95, 138, 0.25);
+      outline: none;
+      transform: translateX(2px);
+    }
+
+    .nav-link[aria-current="page"] {
+      color: var(--brand);
+      border-color: rgba(11, 95, 138, 0.3);
+    }
+
+    .main-column {
+      display: grid;
+      gap: var(--space-4);
+      align-content: start;
+    }
+
+    .filter-panel,
+    .context-panel,
+    #summarySection,
+    .activity-header,
+    .message-panel,
+    .footer-panel,
+    .map-panel {
+      padding: clamp(18px, 3vw, 26px);
+    }
+
+    .filter-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field-action {
+      align-content: end;
     }
 
     .button-row {
@@ -150,23 +281,41 @@
       gap: 8px;
     }
 
-    .chip {
-      border: 1px solid var(--line);
+    .chip,
+    button,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .chip,
+    button {
+      min-height: 44px;
       border-radius: var(--radius-sm);
-      padding: 10px 14px;
+      border: 1px solid transparent;
+      font-weight: 600;
+      padding: 11px 14px;
+      cursor: pointer;
+      transition: transform 170ms ease, background-color 170ms ease, border-color 170ms ease, color 170ms ease;
+    }
+
+    .chip {
+      border-color: var(--line);
       background: var(--surface-alt);
       color: var(--ink);
-      font-weight: 600;
-      min-height: 44px;
-      cursor: pointer;
-      transition: transform 160ms ease, border-color 160ms ease, background 180ms ease;
+    }
+
+    .chip:hover,
+    .chip:focus-visible,
+    button:hover,
+    button:focus-visible {
+      transform: translateY(-1px);
+      outline: none;
     }
 
     .chip:hover,
     .chip:focus-visible {
-      transform: translateY(-1px);
       border-color: var(--brand);
-      outline: none;
     }
 
     .chip.is-active {
@@ -180,38 +329,26 @@
       color: var(--ink);
     }
 
-    input,
-    select,
-    button,
-    textarea {
-      font: inherit;
-    }
-
-    input,
     select,
     textarea {
       width: 100%;
+      min-height: 44px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--line);
       background: #fff;
       color: var(--ink);
       padding: 10px 12px;
-      min-height: 44px;
     }
 
-    button {
-      min-height: 44px;
-      border-radius: var(--radius-sm);
-      border: 1px solid transparent;
-      font-weight: 600;
-      padding: 11px 14px;
-      cursor: pointer;
-      transition: transform 170ms ease, background-color 170ms ease, border-color 170ms ease;
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      line-height: 1.5;
     }
 
     .primary {
       background: var(--brand);
-      color: #f8fdff;
+      color: #f7fbfe;
     }
 
     .primary:hover,
@@ -225,185 +362,171 @@
       border-color: var(--line);
     }
 
-    button:hover,
-    button:focus-visible {
-      transform: translateY(-1px);
-      outline: none;
-    }
-
     button:disabled {
-      opacity: 0.66;
+      opacity: 0.65;
       cursor: wait;
       transform: none;
     }
 
-    #map {
-      width: 100%;
-      height: 340px;
-      border-radius: 0;
-      border: 1px solid var(--line);
-      overflow: hidden;
+    .status {
+      min-height: 1.4em;
+      margin: 10px 0 0;
+      color: var(--brand);
+      font-size: 0.95rem;
     }
 
-    .meta,
-    .warning-list,
-    .small-note {
-      font-size: 0.92rem;
-      color: var(--muted);
-    }
-
-    .summary-lead {
-      font-size: 1.05rem;
-      margin: 0 0 8px;
-      font-weight: 500;
-    }
-
-    .warning-list {
-      margin: 8px 0 0;
-      padding-left: 20px;
-    }
-
-    .dashboard-grid {
+    .context-panel {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      align-items: start;
+      gap: 18px;
     }
 
-    .dashboard-panel {
-      min-width: 0;
-    }
-
-    .sidebar-panel {
-      background: transparent;
-      box-shadow: none;
-      border-radius: 0;
-      border: 0;
-      padding: 20px 18px 24px;
-    }
-
-    .sidebar-panel h2 {
-      margin-bottom: 14px;
-    }
-
-    .ratings-grid {
-      display: block;
-    }
-
-    .rating-card {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      padding: 0 0 14px;
-      margin-bottom: 14px;
-      min-height: 0;
-    }
-
-    .rating-title {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 800;
-    }
-
-    .rating-value {
-      margin: 6px 0 8px;
-      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-      font-size: 1rem;
-      font-weight: 600;
-      line-height: 1.35;
-      letter-spacing: 0;
-    }
-
-    .rating-good {
-      color: var(--good);
-    }
-
-    .rating-maybe {
-      color: var(--maybe);
-    }
-
-    .rating-bad {
-      color: var(--bad);
-    }
-
-    .chart-grid {
+    .metric-grid,
+    .activity-highlight-grid {
       display: grid;
-      grid-template-columns: 1fr;
       gap: 12px;
     }
 
-    .chart-card {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      padding: 0 0 14px;
+    .metric-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(244, 248, 251, 0.9));
     }
 
-    .chart-card:last-child {
-      padding-bottom: 0;
-    }
-
-    .chart-card h3 {
-      margin: 0 0 8px;
-      font-size: 0.98rem;
-      font-weight: 600;
-      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-      letter-spacing: 0;
-    }
-
-    .chart-frame {
-      height: var(--chart-height-mobile);
-      position: relative;
-    }
-
-    .chart-card canvas {
-      display: block !important;
-      width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
-    }
-
-    .report-grid {
-      display: block;
-      margin-bottom: 0;
-    }
-
-    .report-card {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      padding: 0 0 14px;
-      margin-bottom: 14px;
-    }
-
-    .report-card:last-child,
-    .rating-card:last-child {
-      margin-bottom: 0;
-    }
-
-    .report-row {
-      margin: 0 0 5px;
+    .metric-label {
+      margin: 0 0 6px;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
       color: var(--muted);
+    }
+
+    .metric-value {
+      margin: 0 0 4px;
+      font-size: 1.06rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .metric-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .summary-lead {
+      margin: 0 0 8px;
+      font-size: 1.06rem;
+      font-weight: 600;
+    }
+
+    .warning-list {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
       font-size: 0.93rem;
     }
 
-    .report-row strong {
-      color: var(--ink);
-      font-weight: 600;
+    .view-stack,
+    .module-grid {
+      display: grid;
+      gap: var(--space-4);
     }
 
-    .hourly-toggle {
-      margin-top: 8px;
-      border-radius: 0;
+    .module-card {
+      padding: 18px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .module-kicker {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .module-recommendation {
+      margin: 10px 0 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--brand);
+    }
+
+    .stat-list,
+    .detail-list,
+    .source-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .stat-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 5px 10px;
+      border-radius: 999px;
       background: var(--surface-alt);
       border: 1px solid var(--line);
-      padding: 8px 10px;
+      font-size: 0.88rem;
+      color: var(--ink);
     }
 
-    .hourly-toggle summary {
+    .chart-wrap {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(240, 246, 249, 0.84));
+      padding: 12px;
+      min-height: 0;
+      height: var(--chart-height-mobile);
+    }
+
+    .module-card.is-compact .chart-wrap {
+      height: var(--chart-height-compact);
+    }
+
+    .chart-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .chart-empty {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.93rem;
+      padding: 12px;
+    }
+
+    .availability-note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .inline-details {
+      margin-top: 14px;
+      border-top: 1px dashed var(--line);
+      padding-top: 10px;
+    }
+
+    .inline-details summary {
       cursor: pointer;
       font-weight: 600;
       color: var(--ink);
@@ -412,209 +535,101 @@
     .hourly-list {
       margin: 8px 0 0;
       padding-left: 18px;
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .dashboard-grid.is-activities-page .chart-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    .dashboard-grid.is-activities-page .chart-frame {
-      height: 320px;
-      max-height: 320px;
-    }
-
-    .dashboard-grid.is-activities-page .sidebar-panel {
-      background: transparent;
-      box-shadow: none;
-    }
-
-    .dashboard-grid.is-activities-page .report-card,
-    .dashboard-grid.is-activities-page .rating-card {
-      padding-bottom: 18px;
-      margin-bottom: 18px;
-    }
-
-    .message-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .message-panel .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .map-panel details {
+      display: grid;
       gap: 12px;
     }
 
-    textarea {
-      min-height: 190px;
-      resize: vertical;
+    .map-panel summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--ink);
     }
 
-    .message-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
+    #map {
+      width: 100%;
+      height: 320px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      overflow: hidden;
     }
 
-    .source-list {
-      margin: 0;
-      padding-left: 19px;
-      color: var(--muted);
+    .footer-panel {
+      display: grid;
+      gap: 12px;
     }
 
-    .source-list li {
-      margin-bottom: 6px;
+    .source-list a:hover,
+    .source-list a:focus-visible {
+      text-decoration-thickness: 2px;
     }
 
-    .source-list a {
-      color: var(--brand);
-      font-weight: 600;
-    }
-
-    .status {
-      min-height: 24px;
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-top: 8px;
-    }
-
-    @media (min-width: 780px) {
-      .shell {
-        width: min(1240px, calc(100% - 44px));
-        padding-top: 28px;
+    @media (min-width: 720px) {
+      .hero {
+        grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.75fr);
+        align-items: end;
       }
 
-      .layout {
-        grid-template-columns: minmax(330px, 1.03fr) minmax(420px, 1.32fr);
-      }
-
-      .layout .full {
-        grid-column: 1 / -1;
-      }
-
-      .controls-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .dashboard-grid {
-        grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.7fr) minmax(260px, 1fr);
-        gap: 18px;
-      }
-
-      #activitiesSection {
-        grid-column: 1;
-      }
-
-      #chartsSection {
-        grid-column: 2;
-      }
-
-      #reportsSection {
-        grid-column: 3;
-      }
-
-      .chart-grid {
+      .filter-grid,
+      .metric-grid,
+      .activity-highlight-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .message-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      #map {
-        height: 370px;
-      }
-
-      .chart-frame {
-        height: var(--chart-height);
-      }
-
-      .dashboard-grid.is-activities-page {
-        grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
-      }
-
-      .dashboard-grid.is-activities-page #activitiesSection {
-        grid-column: 1;
-      }
-
-      .dashboard-grid.is-activities-page #reportsSection {
-        grid-column: 2;
-      }
-
-      .dashboard-grid.is-activities-page #chartsSection {
-        grid-column: 1 / -1;
-      }
-
-      .dashboard-grid.is-activities-page .chart-frame {
-        height: 420px;
-        max-height: 420px;
       }
     }
 
     @media (min-width: 1024px) {
-      :root {
-        --sidebar-width: 292px;
+      .page-shell {
+        width: min(1320px, calc(100% - 48px));
+        padding-top: 26px;
+        padding-bottom: 48px;
       }
 
-      body {
-        overflow-x: hidden;
+      .workspace {
+        grid-template-columns: 240px minmax(0, 1fr);
+        align-items: start;
       }
 
-      .shell {
-        width: 100%;
-        max-width: none;
-        padding: 24px calc(var(--sidebar-width) + 28px) 42px;
+      .left-rail {
+        position: sticky;
+        top: 24px;
       }
 
-      header,
-      #summarySection,
-      #chartsSection,
-      .panel[aria-label="Controls"],
-      .panel[aria-label="Map"],
-      .panel[aria-label="Message tools"],
-      footer.panel {
-        max-width: none;
+      .filter-grid {
+        grid-template-columns: 1.2fr 1fr 1fr auto;
+        align-items: end;
       }
 
-      .layout {
-        grid-template-columns: 1fr;
+      .metric-grid,
+      .activity-highlight-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
-      .dashboard-grid {
-        display: block;
+      .module-card {
+        grid-template-columns: minmax(240px, 0.95fr) minmax(0, 1.2fr);
+        align-items: start;
       }
 
-      #activitiesSection,
-      #reportsSection {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        width: var(--sidebar-width);
-        overflow-y: auto;
-        background: rgba(242, 245, 248, 0.96);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+      .module-card.is-detailed {
+        grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1.28fr);
       }
 
-      #activitiesSection {
-        left: 0;
-        border-right: 1px solid var(--line);
-      }
-
-      #reportsSection {
-        right: 0;
-        border-left: 1px solid var(--line);
-      }
-
-      #chartsSection {
-        margin: 0;
-      }
-
-      .dashboard-grid.is-activities-page .chart-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .dashboard-grid.is-activities-page #chartsSection {
-        margin-bottom: 0;
+      .chart-wrap {
+        height: var(--chart-height);
       }
     }
 
@@ -629,137 +644,121 @@
   </style>
 </head>
 <body>
-  <aside id="activitiesSection" class="panel dashboard-panel sidebar-panel" aria-label="Activity ratings">
-    <h2>Activity Guidance</h2>
-    <p class="small-note">Always check official San Diego County Beach and Bay water-quality status before entering the water. This page summarizes forecast conditions but does not replace beach closures, posted signs, lifeguards, or official advisories.</p>
-    <div id="ratingsGrid" class="ratings-grid"></div>
-  </aside>
-
-  <aside id="reportsSection" class="panel dashboard-panel sidebar-panel" aria-label="Reports">
-    <h2>Reports</h2>
-    <div id="reportSections" class="report-grid"></div>
-  </aside>
-
-  <div class="shell">
-    <header>
-      <p class="eyebrow">Family planning portal</p>
-      <h1>Family Ocean Day Planner</h1>
-      <p class="subtitle">San Diego • Mission Bay • La Jolla. Combines tides, weather, waves, and practical activity guidance for family outings and homeschool planning.</p>
+  <div class="page-shell">
+    <header class="hero panel">
+      <div class="hero-copy">
+        <p class="eyebrow">Family planning portal</p>
+        <h1>Family Ocean Day Planner</h1>
+        <p class="subtitle">A cleaner planning dashboard for tides, weather, and marine conditions. Start with a La Jolla overview, then open an activity page when you need deeper detail.</p>
+      </div>
+      <div class="hero-side">
+        <p class="hero-label">Default location</p>
+        <p class="hero-value">La Jolla</p>
+        <p class="small-note">Overview first, activity detail on demand, with partial data allowed for longer forecast windows.</p>
+      </div>
     </header>
 
-    <main class="layout">
-      <section class="panel" aria-label="Controls">
-        <h2>Plan Controls</h2>
-        <div class="controls-grid">
-          <div class="control-row">
-            <label for="dateInput">Date</label>
-            <input id="dateInput" type="date" />
-            <div class="button-row" aria-label="Quick date actions">
-              <button id="btnToday" class="chip" type="button">Today</button>
-              <button id="btnTomorrow" class="chip" type="button">Tomorrow</button>
-              <button id="btnWeekend" class="chip" type="button">This Weekend</button>
+    <div class="workspace">
+      <nav class="left-rail panel" aria-label="Planner views and activities">
+        <div class="nav-group">
+          <p class="eyebrow">Views</p>
+          <a id="overviewNavLink" class="nav-link" href="#">Overview</a>
+        </div>
+        <div class="nav-group">
+          <p class="eyebrow">Activities</p>
+          <div id="activityNavLinks"></div>
+        </div>
+        <p class="small-note">Activity pages narrow the forecast to only the reports and charts that matter for that outing.</p>
+      </nav>
+
+      <main class="main-column">
+        <section class="panel filter-panel" aria-label="Forecast filters">
+          <div class="filter-grid">
+            <div class="field">
+              <label for="dateInput">Forecast day</label>
+              <select id="dateInput" aria-label="Select a forecast day"></select>
+              <div class="button-row" aria-label="Quick date actions">
+                <button id="btnToday" class="chip" type="button">Today</button>
+                <button id="btnTomorrow" class="chip" type="button">Tomorrow</button>
+                <button id="btnWeekend" class="chip" type="button">This Weekend</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="zoneSelect">Location</label>
+              <select id="zoneSelect" aria-label="Select a location"></select>
+            </div>
+            <div class="field">
+              <label for="placeSelect">Place</label>
+              <select id="placeSelect" aria-label="Select a place"></select>
+            </div>
+            <div class="field field-action">
+              <button id="updateBtn" class="primary" type="button">Refresh forecast</button>
             </div>
           </div>
-          <div class="control-row">
-            <label for="placeSelect">Saved place</label>
-            <select id="placeSelect" aria-label="Select a saved location"></select>
-            <label for="viewSelect">View</label>
-            <select id="viewSelect" aria-label="Select planner view">
-              <option value="summary">Overview</option>
-              <option value="activities">Activities page</option>
-            </select>
-            <button id="updateBtn" class="primary" type="button">Update conditions</button>
-          </div>
-        </div>
-        <p id="selectedPlaceMeta" class="meta"></p>
-        <p id="statusText" class="status" role="status" aria-live="polite"></p>
-      </section>
-
-      <section class="panel" aria-label="Map">
-        <h2>Saved Places And Map Selection</h2>
-        <div id="map" role="application" aria-label="Interactive map for selecting a place"></div>
-        <p class="small-note">Click a saved marker or click anywhere on the map to create a custom location. OpenStreetMap data and tiles are used with attribution shown on the map.</p>
-      </section>
-
-      <section id="summarySection" class="panel full" aria-label="Overall summary">
-        <h2>Daily Summary</h2>
-        <p id="summaryLead" class="summary-lead">Choose a date and place, then update conditions.</p>
-        <p id="summaryMeta" class="meta"></p>
-        <ul id="warningList" class="warning-list"></ul>
-      </section>
-
-      <div id="dashboardSection" class="full dashboard-grid">
-        <section id="chartsSection" class="panel dashboard-panel chart-panel" aria-label="Charts">
-          <h2>Condition Charts</h2>
-          <div class="chart-grid">
-            <article class="chart-card">
-              <h3>Tide Height</h3>
-              <div class="chart-frame"><canvas id="tideChart" aria-label="Tide chart" role="img"></canvas></div>
-              <p id="tideSummary" class="small-note"></p>
-            </article>
-            <article class="chart-card">
-              <h3>Wave And Swell</h3>
-              <div class="chart-frame"><canvas id="waveChart" aria-label="Wave and swell chart" role="img"></canvas></div>
-              <p id="waveSummary" class="small-note"></p>
-            </article>
-            <article class="chart-card">
-              <h3>Wind</h3>
-              <div class="chart-frame"><canvas id="windChart" aria-label="Wind chart" role="img"></canvas></div>
-              <p id="windSummary" class="small-note"></p>
-            </article>
-            <article class="chart-card">
-              <h3>Rain Probability And Temperature</h3>
-              <div class="chart-frame"><canvas id="weatherChart" aria-label="Rain and temperature chart" role="img"></canvas></div>
-              <p id="weatherSummary" class="small-note"></p>
-            </article>
-            <article class="chart-card" id="waterTempCard" hidden>
-              <h3>Sea Surface Temperature</h3>
-              <div class="chart-frame"><canvas id="waterTempChart" aria-label="Sea temperature chart" role="img"></canvas></div>
-              <p id="waterTempSummary" class="small-note"></p>
-            </article>
-          </div>
+          <p id="selectedPlaceMeta" class="meta"></p>
+          <p id="forecastRangeText" class="meta"></p>
+          <p id="statusText" class="status" role="status" aria-live="polite"></p>
         </section>
 
-      </div>
+        <section class="panel context-panel" aria-label="Current planning context">
+          <div>
+            <p id="viewEyebrow" class="eyebrow">Overview</p>
+            <h2 id="viewTitle">Loading latest conditions...</h2>
+            <p id="viewDescription" class="subtitle-small">Forecast and activity guidance will appear after the first update finishes.</p>
+          </div>
+          <div id="activitySummaryStrip" class="metric-grid"></div>
+        </section>
 
-      <section class="panel full" aria-label="Message tools">
-        <h2>Message Tools</h2>
-        <div class="message-grid">
-          <article>
-            <h3>Homeschool Tide-pool Message</h3>
-            <textarea id="tidepoolMessage" aria-label="Homeschool tide-pool message"></textarea>
-            <div class="message-actions">
-              <button class="secondary" id="copyTidepool" type="button">Copy</button>
-            </div>
-          </article>
-          <article>
-            <h3>Family Beach Day Message</h3>
-            <textarea id="beachMessage" aria-label="Family beach day message"></textarea>
-            <div class="message-actions">
-              <button class="secondary" id="copyBeach" type="button">Copy</button>
-            </div>
-          </article>
-          <article>
-            <h3>Beginner Surf Message</h3>
-            <textarea id="surfMessage" aria-label="Beginner surf message"></textarea>
-            <div class="message-actions">
-              <button class="secondary" id="copySurf" type="button">Copy</button>
-            </div>
-          </article>
-        </div>
-      </section>
+        <section id="summarySection" class="panel" aria-label="Daily summary">
+          <h2>Daily Summary</h2>
+          <p id="summaryLead" class="summary-lead">Choose a forecast day and location, then refresh the planner.</p>
+          <p id="summaryMeta" class="meta"></p>
+          <ul id="warningList" class="warning-list"></ul>
+        </section>
 
-      <footer class="panel full" aria-label="Safety and official links">
-        <h2>Safety And Official Sources</h2>
-        <ul class="source-list">
-          <li><a href="https://api.tidesandcurrents.noaa.gov/api/prod/" target="_blank" rel="noopener">NOAA CO-OPS Tide API</a></li>
-          <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo Forecast API</a> and <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine API</a></li>
-          <li><a href="https://www.sdbeachinfo.com/" target="_blank" rel="noopener">San Diego County Beach And Bay Water Quality</a></li>
-          <li><a href="https://www.weather.gov/" target="_blank" rel="noopener">National Weather Service Forecasts And Alerts</a></li>
-        </ul>
-        <p class="small-note">This page is planning support for families and groups. It does not replace lifeguards, posted warnings, water-quality closures, or official safety guidance.</p>
-      </footer>
-    </main>
+        <section id="overviewView" class="view-stack" aria-label="Overview reports">
+          <div id="overviewReports" class="module-grid"></div>
+          <section class="panel map-panel" aria-label="Map and custom location">
+            <details>
+              <summary>Custom location map</summary>
+              <div id="map" role="application" aria-label="Interactive map for selecting a place"></div>
+              <p class="small-note">Click a saved marker or click anywhere on the map to create a custom place. This tool is secondary to the location filters, but it remains available when you need a custom point.</p>
+            </details>
+          </section>
+        </section>
+
+        <section id="activityView" class="view-stack" aria-label="Activity details" hidden>
+          <article class="panel activity-header">
+            <p class="eyebrow">Activity View</p>
+            <h2 id="activityTitle">Activity detail</h2>
+            <p id="activityIntro" class="subtitle-small"></p>
+            <div id="activityHighlights" class="activity-highlight-grid"></div>
+          </article>
+          <div id="activityReports" class="module-grid"></div>
+          <section id="messageSection" class="panel message-panel" aria-label="Homeschool group message" hidden>
+            <div class="section-head">
+              <div>
+                <h2>Homeschool Group Message</h2>
+                <p class="subtitle-small">Copy a location-, day-, and activity-specific note for the current plan.</p>
+              </div>
+              <button id="copyActivityMessage" class="secondary" type="button">Copy message</button>
+            </div>
+            <textarea id="activityMessage" aria-label="Homeschool group message"></textarea>
+          </section>
+        </section>
+
+        <footer class="panel footer-panel" aria-label="Safety and official links">
+          <h2>Safety And Official Sources</h2>
+          <ul class="source-list">
+            <li><a href="https://api.tidesandcurrents.noaa.gov/api/prod/" target="_blank" rel="noopener">NOAA CO-OPS Tide API</a></li>
+            <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo Forecast API</a> and <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine API</a></li>
+            <li><a href="https://www.sdbeachinfo.com/" target="_blank" rel="noopener">San Diego County Beach And Bay Water Quality</a></li>
+            <li><a href="https://www.weather.gov/" target="_blank" rel="noopener">National Weather Service Forecasts And Alerts</a></li>
+          </ul>
+          <p class="small-note">This planner supports decisions for families and groups. It does not replace lifeguards, posted warnings, closures, or official safety guidance.</p>
+        </footer>
+      </main>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -879,6 +878,83 @@
       }
     ];
 
+    const LOCATIONS = [
+      {
+        id: "la-jolla",
+        label: "La Jolla",
+        placeIds: ["la-jolla-shores", "la-jolla-cove", "scripps-pier"]
+      },
+      {
+        id: "mission-bay",
+        label: "Mission Bay",
+        placeIds: ["mission-bay-quivira", "mission-beach"]
+      },
+      {
+        id: "san-diego-coast",
+        label: "San Diego Coast",
+        placeIds: ["ocean-beach", "point-loma-cabrillo"]
+      }
+    ];
+
+    const ACTIVITIES = [
+      {
+        slug: "tide-pools",
+        navLabel: "Tide Pools",
+        title: "Tide Pools / Homeschool",
+        ratingKey: "tidePools",
+        reportKeys: ["tide", "marine", "weather"],
+        isHomeschool: true,
+        intro: "Low tide timing matters most here. Use marine and weather detail to confirm whether that window is worth the trip."
+      },
+      {
+        slug: "beach-day",
+        navLabel: "Beach Day",
+        title: "Family Beach Day",
+        ratingKey: "beachDay",
+        reportKeys: ["weather", "wind", "marine"],
+        isHomeschool: false,
+        intro: "Comfort, wind, and light surf conditions drive whether a family beach outing will feel easy or annoying."
+      },
+      {
+        slug: "kids-surf",
+        navLabel: "Kids Surf",
+        title: "Kids / Beginner Surf",
+        ratingKey: "kidsSurf",
+        reportKeys: ["marine", "wind", "weather"],
+        isHomeschool: false,
+        intro: "For beginner surf, cleaner small waves and manageable wind matter more than broad all-day summaries."
+      },
+      {
+        slug: "adult-surf",
+        navLabel: "Adult Surf",
+        title: "Adult Surf",
+        ratingKey: "adultSurf",
+        reportKeys: ["marine", "wind", "weather"],
+        isHomeschool: false,
+        intro: "This view emphasizes wave energy and wind so surf decisions are separated from family-oriented planning."
+      },
+      {
+        slug: "snorkel-dive",
+        navLabel: "Snorkel / Dive",
+        title: "Snorkel / Dive",
+        ratingKey: "snorkelDive",
+        reportKeys: ["marine", "tide", "wind", "waterTemp"],
+        isHomeschool: true,
+        intro: "Snorkel and dive windows depend on calm marine conditions first, with tide, wind, and water temperature used as supporting context."
+      },
+      {
+        slug: "paddle",
+        navLabel: "Kayak / SUP",
+        title: "Kayak / SUP",
+        ratingKey: "paddle",
+        reportKeys: ["wind", "marine", "weather"],
+        isHomeschool: false,
+        intro: "This view focuses on wind, gusts, and surface conditions so paddling decisions are easier to trust."
+      }
+    ];
+
+    const DEFAULT_LOCATION_ID = "la-jolla";
+
     const WATER_QUALITY_URL = "https://www.sdbeachinfo.com/";
 
     // =========================
@@ -886,19 +962,20 @@
     // =========================
     const state = {
       selectedDate: "",
-      viewMode: "summary",
+      availableDates: [],
+      availability: {
+        weatherEnd: null,
+        marineEnd: null
+      },
+      selectedLocationId: DEFAULT_LOCATION_ID,
+      currentView: "overview",
+      selectedActivity: null,
       selectedPlace: PLACES[0],
       condition: null,
       map: null,
       mapMarkers: new Map(),
       customMarker: null,
-      charts: {
-        tide: null,
-        wave: null,
-        wind: null,
-        weather: null,
-        waterTemp: null
-      }
+      charts: {}
     };
 
     // =========================
@@ -906,36 +983,35 @@
     // =========================
     const el = {
       dateInput: document.getElementById("dateInput"),
-      viewSelect: document.getElementById("viewSelect"),
+      zoneSelect: document.getElementById("zoneSelect"),
       btnToday: document.getElementById("btnToday"),
       btnTomorrow: document.getElementById("btnTomorrow"),
       btnWeekend: document.getElementById("btnWeekend"),
       placeSelect: document.getElementById("placeSelect"),
       updateBtn: document.getElementById("updateBtn"),
       selectedPlaceMeta: document.getElementById("selectedPlaceMeta"),
+      forecastRangeText: document.getElementById("forecastRangeText"),
       statusText: document.getElementById("statusText"),
+      overviewNavLink: document.getElementById("overviewNavLink"),
+      activityNavLinks: document.getElementById("activityNavLinks"),
+      viewEyebrow: document.getElementById("viewEyebrow"),
+      viewTitle: document.getElementById("viewTitle"),
+      viewDescription: document.getElementById("viewDescription"),
+      activitySummaryStrip: document.getElementById("activitySummaryStrip"),
       summaryLead: document.getElementById("summaryLead"),
       summaryMeta: document.getElementById("summaryMeta"),
       warningList: document.getElementById("warningList"),
       summarySection: document.getElementById("summarySection"),
-      dashboardSection: document.getElementById("dashboardSection"),
-      chartsSection: document.getElementById("chartsSection"),
-      reportsSection: document.getElementById("reportsSection"),
-      activitiesSection: document.getElementById("activitiesSection"),
-      reportSections: document.getElementById("reportSections"),
-      ratingsGrid: document.getElementById("ratingsGrid"),
-      tideSummary: document.getElementById("tideSummary"),
-      waveSummary: document.getElementById("waveSummary"),
-      windSummary: document.getElementById("windSummary"),
-      weatherSummary: document.getElementById("weatherSummary"),
-      waterTempCard: document.getElementById("waterTempCard"),
-      waterTempSummary: document.getElementById("waterTempSummary"),
-      tidepoolMessage: document.getElementById("tidepoolMessage"),
-      beachMessage: document.getElementById("beachMessage"),
-      surfMessage: document.getElementById("surfMessage"),
-      copyTidepool: document.getElementById("copyTidepool"),
-      copyBeach: document.getElementById("copyBeach"),
-      copySurf: document.getElementById("copySurf")
+      overviewView: document.getElementById("overviewView"),
+      overviewReports: document.getElementById("overviewReports"),
+      activityView: document.getElementById("activityView"),
+      activityTitle: document.getElementById("activityTitle"),
+      activityIntro: document.getElementById("activityIntro"),
+      activityHighlights: document.getElementById("activityHighlights"),
+      activityReports: document.getElementById("activityReports"),
+      messageSection: document.getElementById("messageSection"),
+      activityMessage: document.getElementById("activityMessage"),
+      copyActivityMessage: document.getElementById("copyActivityMessage")
     };
 
     // =========================
@@ -1078,6 +1154,26 @@
 
     function getPlaceById(placeId) {
       return PLACES.find((p) => p.id === placeId) || null;
+    }
+
+    function getLocationById(locationId) {
+      return LOCATIONS.find((location) => location.id === locationId) || null;
+    }
+
+    function getPlacesForLocation(locationId) {
+      const location = getLocationById(locationId);
+      if (!location) return [];
+      return location.placeIds.map(getPlaceById).filter(Boolean);
+    }
+
+    function getActivityBySlug(slug) {
+      return ACTIVITIES.find((activity) => activity.slug === slug) || null;
+    }
+
+    function addDays(date, amount) {
+      const next = new Date(date);
+      next.setDate(next.getDate() + amount);
+      return next;
     }
 
     function selectedDateOrToday() {
@@ -1288,6 +1384,57 @@
         status: "unknown",
         label: "Check official source",
         url: WATER_QUALITY_URL
+      };
+    }
+
+    async function fetchAvailableDatesForPlace(place) {
+      const today = dateInputValue();
+      const end = toYmd(addDays(fromYmd(today), 15));
+      const dateSet = new Set([today]);
+      let weatherEnd = null;
+      let marineEnd = null;
+
+      const weatherParams = new URLSearchParams({
+        latitude: String(place.lat),
+        longitude: String(place.lon),
+        timezone: TZ,
+        daily: "sunrise",
+        start_date: today,
+        end_date: end
+      });
+
+      const marineParams = new URLSearchParams({
+        latitude: String(place.lat),
+        longitude: String(place.lon),
+        timezone: TZ,
+        hourly: "wave_height",
+        start_date: today,
+        end_date: end
+      });
+
+      const [weatherResult, marineResult] = await Promise.allSettled([
+        fetchJson(`${WEATHER_URL}?${weatherParams.toString()}`),
+        fetchJson(`${MARINE_URL}?${marineParams.toString()}`)
+      ]);
+
+      if (weatherResult.status === "fulfilled") {
+        const times = weatherResult.value?.daily?.time || [];
+        times.forEach((date) => dateSet.add(date));
+        weatherEnd = times[times.length - 1] || null;
+      }
+
+      if (marineResult.status === "fulfilled") {
+        const times = marineResult.value?.hourly?.time || [];
+        times.forEach((time) => dateSet.add(String(time).slice(0, 10)));
+        const marineDates = Array.from(new Set(times.map((time) => String(time).slice(0, 10))));
+        marineEnd = marineDates[marineDates.length - 1] || null;
+      }
+
+      const dates = Array.from(dateSet).sort();
+      return {
+        dates,
+        weatherEnd,
+        marineEnd
       };
     }
 
@@ -1603,168 +1750,343 @@
       el.statusText.textContent = message;
     }
 
+    function labelScore(label) {
+      const value = String(label || "").toLowerCase();
+      if (value.includes("good") || value.includes("great") || value.includes("ideal")) return 3;
+      if (value.includes("fair") || value.includes("possible") || value.includes("mixed") || value.includes("small surf")) return 2;
+      return 1;
+    }
+
+    function findMaxItem(items, accessor) {
+      let best = null;
+      items.forEach((item) => {
+        const value = accessor(item);
+        if (value == null || Number.isNaN(value)) return;
+        if (!best || value > best.value) {
+          best = { item, value };
+        }
+      });
+      return best ? best.item : null;
+    }
+
+    function findMinItem(items, accessor) {
+      let best = null;
+      items.forEach((item) => {
+        const value = accessor(item);
+        if (value == null || Number.isNaN(value)) return;
+        if (!best || value < best.value) {
+          best = { item, value };
+        }
+      });
+      return best ? best.item : null;
+    }
+
+    function renderLocationSelect() {
+      el.zoneSelect.innerHTML = LOCATIONS.map((location) => `<option value="${location.id}">${location.label}</option>`).join("");
+      el.zoneSelect.value = state.selectedLocationId;
+    }
+
     function renderPlaceSelect() {
-      el.placeSelect.innerHTML = PLACES.map((place) => `<option value="${place.id}">${place.name} (${place.zone})</option>`).join("");
+      const options = getPlacesForLocation(state.selectedLocationId).slice();
+      if (state.selectedPlace && state.selectedPlace.id === "custom") {
+        options.push(state.selectedPlace);
+      }
+
+      el.placeSelect.innerHTML = options.map((place) => `<option value="${place.id}">${place.name}</option>`).join("");
       el.placeSelect.value = state.selectedPlace.id;
     }
 
+    function renderActivityNav() {
+      el.activityNavLinks.innerHTML = ACTIVITIES.map((activity) => `
+        <a class="nav-link" href="#/activity/${activity.slug}" data-activity-link="${activity.slug}">${activity.navLabel}</a>
+      `).join("");
+
+      const isOverview = state.currentView === "overview";
+      if (isOverview) {
+        el.overviewNavLink.setAttribute("aria-current", "page");
+      } else {
+        el.overviewNavLink.removeAttribute("aria-current");
+      }
+
+      el.activityNavLinks.querySelectorAll("[data-activity-link]").forEach((link) => {
+        const slug = link.getAttribute("data-activity-link");
+        const active = state.currentView === "activity" && state.selectedActivity && state.selectedActivity.slug === slug;
+        if (active) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    }
+
     function renderSelectedPlaceMeta() {
+      const location = getLocationById(state.selectedLocationId);
       const p = state.selectedPlace;
-      el.selectedPlaceMeta.textContent = `Selected place: ${p.name} (${p.zone}) - ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}. ${p.notes}`;
+      const locationText = location ? location.label : p.zone;
+      el.selectedPlaceMeta.textContent = `Location: ${locationText}. Place: ${p.name} (${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}). ${p.notes}`;
+    }
+
+    function renderForecastRangeText() {
+      const parts = [];
+      if (state.availability.weatherEnd) {
+        parts.push(`weather through ${formatDate(fromYmd(state.availability.weatherEnd))}`);
+      }
+      if (state.availability.marineEnd) {
+        parts.push(`marine through ${formatDate(fromYmd(state.availability.marineEnd))}`);
+      }
+      if (!parts.length) {
+        el.forecastRangeText.textContent = "Forecast range unavailable right now. The planner will still attempt to load the selected day.";
+        return;
+      }
+      el.forecastRangeText.textContent = `Available future dates follow the longest forecast window currently returned by the APIs: ${parts.join(" and ")}.`;
+    }
+
+    function markQuickDate(mode) {
+      [el.btnToday, el.btnTomorrow, el.btnWeekend].forEach((btn) => btn.classList.remove("is-active"));
+      if (mode === "today") el.btnToday.classList.add("is-active");
+      if (mode === "tomorrow") el.btnTomorrow.classList.add("is-active");
+      if (mode === "weekend") el.btnWeekend.classList.add("is-active");
+    }
+
+    function resolveAvailableDate(targetDate) {
+      const target = typeof targetDate === "string" ? targetDate : toYmd(targetDate);
+      if (state.availableDates.includes(target)) return target;
+      return state.availableDates.find((date) => date >= target) || state.availableDates[state.availableDates.length - 1] || target;
+    }
+
+    function renderDateOptions() {
+      const fallbackDate = state.selectedDate || dateInputValue();
+      const options = state.availableDates.length ? state.availableDates : [fallbackDate];
+      el.dateInput.innerHTML = options.map((date) => `<option value="${date}">${formatDate(fromYmd(date))}</option>`).join("");
+      state.selectedDate = resolveAvailableDate(fallbackDate);
+      el.dateInput.value = state.selectedDate;
+    }
+
+    function sortedActivityCards(condition) {
+      return ACTIVITIES.map((activity) => ({
+        activity,
+        rating: condition.ratings[activity.ratingKey]
+      })).sort((left, right) => labelScore(right.rating.label) - labelScore(left.rating.label));
     }
 
     function renderSummary(condition) {
+      const topActivities = sortedActivityCards(condition).slice(0, 2).map((entry) => entry.activity.navLabel).join(" and ");
       const bestLow = condition.tides.bestLow;
       const bestLowText = bestLow
-        ? `Best low tide: ${formatTime(bestLow.time)} at ${formatNumber(bestLow.heightFt)} ft.`
-        : "No clear low tide found for this date.";
+        ? `Best low tide ${formatTime(bestLow.time)} at ${formatNumber(bestLow.heightFt)} ft.`
+        : "No clear low-tide window found for this date.";
       const waveAvg = average(condition.marine.hourly.map((x) => x.waveFt));
       const windAvg = average(condition.weather.hourly.map((x) => x.windMph));
       const rainMax = maxValue(condition.weather.hourly.map((x) => x.rainChance));
 
-      el.summaryLead.textContent = `For ${condition.place.name} on ${formatDate(fromYmd(condition.date))}: tide pooling looks ${condition.ratings.tidePools.label.toLowerCase()}, and beach-day conditions look ${condition.ratings.beachDay.label.toLowerCase()}.`;
+      el.summaryLead.textContent = `${condition.place.name} on ${formatDate(fromYmd(condition.date))} looks strongest for ${topActivities || "careful activity selection"}.`;
       el.summaryMeta.textContent = `${bestLowText} Avg wave ${formatNumber(waveAvg)} ft, avg wind ${formatNumber(windAvg, 0)} mph, max rain chance ${formatNumber(rainMax, 0)}%. Water quality: ${condition.waterQuality.label}.`;
 
-      if (condition.tides.stationFallbackUsed) {
-        el.summaryMeta.textContent += " Mission Bay tide values are using nearest NOAA fallback station.";
-      }
-
       el.warningList.innerHTML = "";
-      if (!condition.warnings.length) {
+      const warnings = condition.warnings.length
+        ? condition.warnings
+        : ["No obvious forecast gaps reported. Still verify closures, signs, water quality, and live beach conditions before leaving."];
+      warnings.forEach((warning) => {
         const li = document.createElement("li");
-        li.textContent = "Data freshness looks good. Continue to verify lifeguard and official advisory updates before travel.";
+        li.textContent = warning;
         el.warningList.appendChild(li);
+      });
+    }
+
+    function renderContextHeader(condition) {
+      const location = getLocationById(state.selectedLocationId);
+      if (state.currentView === "overview" || !state.selectedActivity) {
+        el.viewEyebrow.textContent = "Overview";
+        el.viewTitle.textContent = `${location ? location.label : condition.place.zone} overview for ${formatDate(fromYmd(condition.date))}`;
+        el.viewDescription.textContent = "Grouped tide, marine, wind, and weather modules with activity guidance ranked for quick scanning.";
       } else {
-        condition.warnings.forEach((warning) => {
-          const li = document.createElement("li");
-          li.textContent = warning;
-          el.warningList.appendChild(li);
-        });
+        el.viewEyebrow.textContent = "Activity View";
+        el.viewTitle.textContent = `${state.selectedActivity.title} for ${condition.place.name}`;
+        el.viewDescription.textContent = state.selectedActivity.intro;
       }
     }
 
-    function applyViewMode(mode) {
-      const safeMode = ["summary", "activities"].includes(mode) ? mode : "summary";
-      state.viewMode = safeMode;
-      el.viewSelect.value = safeMode;
-
-      el.summarySection.hidden = safeMode !== "summary";
-      el.dashboardSection.hidden = false;
-      el.dashboardSection.classList.toggle("is-activities-page", safeMode === "activities");
+    function renderActivitySummaryStrip(condition) {
+      const cards = sortedActivityCards(condition);
+      el.activitySummaryStrip.innerHTML = cards.map(({ activity, rating }) => `
+        <article class="metric-card">
+          <p class="metric-label">${activity.navLabel}</p>
+          <p class="metric-value">${rating.label}</p>
+          <p class="metric-note">${rating.reason}</p>
+        </article>
+      `).join("");
     }
 
     function buildHourlyList(items, renderLine) {
       if (!items.length) return "";
       const list = items.slice(0, 24).map((item) => `<li>${renderLine(item)}</li>`).join("");
       return `
-        <details class="hourly-toggle">
-          <summary>View hourly data</summary>
+        <details class="inline-details">
+          <summary>View hourly detail</summary>
           <ul class="hourly-list">${list}</ul>
         </details>
       `;
     }
 
-    function renderReports(condition) {
-      const bestLow = condition.tides.bestLow;
-      const metrics = summarizeCoreMetrics(condition);
-      const isActivitiesPage = state.viewMode === "activities";
-
-      const tideData = [
-        `Best low tide: ${bestLow ? `${formatTime(bestLow.time)} at ${formatNumber(bestLow.heightFt)} ft` : "n/a"}`,
-        `Lowest tide favors tide pooling when conditions are calm.`,
-        `Tide station: ${condition.tides.stationId}${condition.tides.stationFallbackUsed ? " (fallback)" : ""}`,
-        `Low-tide access window: ${tideWindowAround(bestLow ? bestLow.time : null)}`
-      ];
-      const tideSuggestion = isActivitiesPage
-        ? `Suggestion: Tide pooling should focus on the low-tide window around ${bestLow ? formatTime(bestLow.time) : "the best available low"}. Lower tides are better, and calmer surf or wind improves the experience.`
-        : `Suggestion: Prioritize the low-tide window around ${bestLow ? formatTime(bestLow.time) : "the best available low"}; lower tides are better for tide pooling access.`;
-
-      const weatherData = [
-        `Air temp: ${formatNumber(metrics.minTemp, 0)} to ${formatNumber(metrics.maxTemp, 0)} F`,
-        `Wind avg: ${formatNumber(metrics.avgWind, 0)} mph`,
-        `Rain chance max: ${formatNumber(metrics.maxRainChance, 0)}%`,
-        `Max gusts: ${formatNumber(metrics.maxGust, 0)} mph`
-      ];
-      const weatherSuggestion = isActivitiesPage
-        ? `Suggestion: Weather is most useful for narrowing your timing. Earlier daylight windows are usually better when wind or gusts build later in the day.`
-        : `Suggestion: Use earlier daylight hours when wind is lighter and rain chance is lower.`;
-
-      const marineData = [
-        `Wave avg: ${formatNumber(metrics.avgWave)} ft`,
-        `Swell avg: ${formatNumber(average(condition.marine.hourly.map((x) => x.swellFt)))} ft`,
-        `Sea temp avg: ${formatNumber(average(condition.marine.hourly.map((x) => x.seaTempF)), 1)} F`,
-        `Avg swell period: ${formatNumber(average(condition.marine.hourly.map((x) => x.swellPeriodSec)), 0)} s`
-      ];
-      const marineSuggestion = isActivitiesPage
-        ? `Suggestion: Marine conditions should drive activity selection. Smaller surf and swell are better for snorkeling, diving, tide pools, and beginner outings, while moderate surf supports surf-focused plans.`
-        : `Suggestion: Favor smaller wave/swell windows for snorkel, dive, and kid-focused activities.`;
-
-      const cards = [
-        {
-          title: "Tide report",
-          data: tideData,
-          suggestion: tideSuggestion,
-          hourly: buildHourlyList(condition.tides.hourly, (row) => `${formatTime(row.time)} - ${formatNumber(row.heightFt)} ft`)
-        },
-        {
-          title: "Weather report",
-          data: weatherData,
-          suggestion: weatherSuggestion,
-          hourly: buildHourlyList(condition.weather.hourly, (row) => `${formatTime(row.time)} - ${formatNumber(row.tempF, 0)} F, wind ${formatNumber(row.windMph, 0)} mph, rain ${formatNumber(row.rainChance, 0)}%`)
-        },
-        {
-          title: "Marine report",
-          data: marineData,
-          suggestion: marineSuggestion,
-          hourly: buildHourlyList(condition.marine.hourly, (row) => `${formatTime(row.time)} - wave ${formatNumber(row.waveFt)} ft, swell ${formatNumber(row.swellFt)} ft, period ${formatNumber(row.swellPeriodSec, 0)} s`)
-        }
-      ];
-
-      el.reportSections.innerHTML = cards.map((card) => `
-        <article class="report-card">
-          <h3>${card.title}</h3>
-          <ul class="report-data">${card.data.map((entry) => `<li>${entry}</li>`).join("")}</ul>
-          <p class="report-suggestion">${card.suggestion}</p>
-          ${card.hourly}
-        </article>
-      `).join("");
+    function tideWindowAround(time) {
+      if (!time) return "No reliable low tide window available";
+      const start = new Date(time.getTime() - (60 * 60 * 1000));
+      const end = new Date(time.getTime() + (60 * 60 * 1000));
+      return `${formatTime(start)}-${formatTime(end)}`;
     }
 
-    function renderRatings(condition) {
-      const cards = [
-        { title: "Tide pools / homeschool", value: condition.ratings.tidePools.label, reason: condition.ratings.tidePools.reason },
-        { title: "General beach day", value: condition.ratings.beachDay.label, reason: condition.ratings.beachDay.reason },
-        { title: "Kids / beginner surf", value: condition.ratings.kidsSurf.label, reason: condition.ratings.kidsSurf.reason },
-        { title: "Adult surf", value: condition.ratings.adultSurf.label, reason: condition.ratings.adultSurf.reason },
-        { title: "Snorkel / dive", value: condition.ratings.snorkelDive.label, reason: condition.ratings.snorkelDive.reason },
-        { title: "Kayak / SUP", value: condition.ratings.paddle.label, reason: condition.ratings.paddle.reason }
-      ];
+    function buildReportCatalog(condition) {
+      const metrics = summarizeCoreMetrics(condition);
+      const weatherHourly = condition.weather.hourly;
+      const marineHourly = condition.marine.hourly;
+      const lows = condition.tides.highsLows.filter((x) => x.type === "L");
+      const highs = condition.tides.highsLows.filter((x) => x.type === "H");
+      const peakWind = findMaxItem(weatherHourly, (row) => row.gustMph ?? row.windMph);
+      const calmestWind = findMinItem(weatherHourly, (row) => row.windMph);
+      const peakWave = findMaxItem(marineHourly, (row) => row.waveFt);
+      const seaTemps = marineHourly.map((row) => row.seaTempF).filter((value) => value != null);
 
-      el.ratingsGrid.innerHTML = cards.map((card) => `
-        <article class="rating-card">
-          <p class="rating-title">${card.title}</p>
-          <p class="rating-value">Suggestion: ${card.value}</p>
-          <p class="small-note">Data: ${card.reason}</p>
-        </article>
-      `).join("");
+      return {
+        tide: {
+          key: "tide",
+          chartKey: "tide",
+          title: "Tide Window",
+          kicker: "Timing first",
+          recommendation: `Recommendation: ${condition.ratings.tidePools.label}. Center shoreline plans around ${tideWindowAround(condition.tides.bestLow ? condition.tides.bestLow.time : null)}.`,
+          pills: [
+            `Best low ${condition.tides.bestLow ? `${formatTime(condition.tides.bestLow.time)} / ${formatNumber(condition.tides.bestLow.heightFt)} ft` : "n/a"}`,
+            `Station ${condition.tides.stationId}${condition.tides.stationFallbackUsed ? " fallback" : ""}`,
+            `${lows.length} lows logged`
+          ],
+          details: [
+            `Lowest tide is ${condition.tides.bestLow ? `${formatTime(condition.tides.bestLow.time)} at ${formatNumber(condition.tides.bestLow.heightFt)} ft` : "not available"}.`,
+            `Highs: ${highs.map((entry) => `${formatTime(entry.time)} (${formatNumber(entry.heightFt)} ft)`).join("; ") || "n/a"}.`,
+            `Lows: ${lows.map((entry) => `${formatTime(entry.time)} (${formatNumber(entry.heightFt)} ft)`).join("; ") || "n/a"}.`
+          ],
+          availabilityNote: condition.tides.hourly.length ? "" : "Hourly tide curve unavailable for this date. High/low tide timing is still shown where NOAA returned it.",
+          hasChartData: condition.tides.hourly.length > 0,
+          emptyText: "Hourly tide chart unavailable for this date.",
+          hourlyHtml: buildHourlyList(condition.tides.hourly, (row) => `${formatTime(row.time)} - ${formatNumber(row.heightFt)} ft`)
+        },
+        marine: {
+          key: "marine",
+          chartKey: "wave",
+          title: "Wave And Swell",
+          kicker: "Surface conditions",
+          recommendation: `Recommendation: ${condition.ratings.snorkelDive.label} for low-clarity activities, ${condition.ratings.adultSurf.label.toLowerCase()} for surf energy.`,
+          pills: [
+            `Wave avg ${formatNumber(metrics.avgWave)} ft`,
+            `Swell ${formatNumber(average(marineHourly.map((row) => row.swellFt)))} ft`,
+            `Period ${formatNumber(average(marineHourly.map((row) => row.swellPeriodSec)), 0)} s`
+          ],
+          details: [
+            `Peak wave window: ${peakWave ? `${formatTime(peakWave.time)} near ${formatNumber(peakWave.waveFt)} ft` : "n/a"}.`,
+            `Average swell height is ${formatNumber(average(marineHourly.map((row) => row.swellFt)))} ft with period ${formatNumber(average(marineHourly.map((row) => row.swellPeriodSec)), 0)} seconds.`,
+            `Sea surface temperature averages ${formatNumber(average(seaTemps), 1)} F when reported.`
+          ],
+          availabilityNote: marineHourly.length ? "" : "Marine forecast data was not returned for this day. Longer tide coverage can extend beyond marine forecast range.",
+          hasChartData: marineHourly.length > 0,
+          emptyText: "Wave and swell chart unavailable for this date.",
+          hourlyHtml: buildHourlyList(marineHourly, (row) => `${formatTime(row.time)} - wave ${formatNumber(row.waveFt)} ft, swell ${formatNumber(row.swellFt)} ft, period ${formatNumber(row.swellPeriodSec, 0)} s`)
+        },
+        wind: {
+          key: "wind",
+          chartKey: "wind",
+          title: "Wind",
+          kicker: "Exposure and chop",
+          recommendation: `Recommendation: ${condition.ratings.paddle.label}. Wind should be treated as a go/no-go lever for paddle and beginner outings.`,
+          pills: [
+            `Avg ${formatNumber(metrics.avgWind, 0)} mph`,
+            `Gusts ${formatNumber(metrics.maxGust, 0)} mph`,
+            `Calmest ${calmestWind ? formatTime(calmestWind.time) : "n/a"}`
+          ],
+          details: [
+            `Strongest gusts appear near ${peakWind ? `${formatTime(peakWind.time)} at ${formatNumber(peakWind.gustMph ?? peakWind.windMph, 0)} mph` : "n/a"}.`,
+            `Calmest wind window is around ${calmestWind ? `${formatTime(calmestWind.time)} at ${formatNumber(calmestWind.windMph, 0)} mph` : "n/a"}.`,
+            `Use the calmer part of the day for paddle, beach comfort, and younger participants.`
+          ],
+          availabilityNote: weatherHourly.length ? "" : "Wind forecast data was not returned for this day.",
+          hasChartData: weatherHourly.length > 0,
+          emptyText: "Wind chart unavailable for this date.",
+          hourlyHtml: buildHourlyList(weatherHourly, (row) => `${formatTime(row.time)} - wind ${formatNumber(row.windMph, 0)} mph, gusts ${formatNumber(row.gustMph, 0)} mph`)
+        },
+        weather: {
+          key: "weather",
+          chartKey: "weather",
+          title: "Rain And Temperature",
+          kicker: "Comfort and coverage",
+          recommendation: `Recommendation: ${condition.ratings.beachDay.label}. Use this module to narrow comfort, timing, and weather-confidence questions.`,
+          pills: [
+            `${formatNumber(metrics.minTemp, 0)}-${formatNumber(metrics.maxTemp, 0)} F`,
+            `Rain max ${formatNumber(metrics.maxRainChance, 0)}%`,
+            `UV max ${formatNumber(condition.weather.daily.uvMax, 0)}`
+          ],
+          details: [
+            `Temperature runs from ${formatNumber(metrics.minTemp, 0)} to ${formatNumber(metrics.maxTemp, 0)} F.`,
+            `Maximum rain chance is ${formatNumber(metrics.maxRainChance, 0)}%.`,
+            `Sunrise ${formatTime(condition.weather.daily.sunrise)} and sunset ${formatTime(condition.weather.daily.sunset)} define the daylight planning window.`
+          ],
+          availabilityNote: weatherHourly.length ? "" : "Weather forecast data was not returned for this day.",
+          hasChartData: weatherHourly.length > 0,
+          emptyText: "Weather chart unavailable for this date.",
+          hourlyHtml: buildHourlyList(weatherHourly, (row) => `${formatTime(row.time)} - ${formatNumber(row.tempF, 0)} F, rain ${formatNumber(row.rainChance, 0)}%, cloud ${formatNumber(row.cloudCover, 0)}%`)
+        },
+        waterTemp: {
+          key: "waterTemp",
+          chartKey: "waterTemp",
+          title: "Water Temperature",
+          kicker: "Immersion comfort",
+          recommendation: `Recommendation: Use water temperature to set expectations for snorkel, dive, and longer in-water sessions.`,
+          pills: [
+            `Avg ${formatNumber(average(seaTemps), 1)} F`,
+            `Low ${formatNumber(minValue(seaTemps), 1)} F`,
+            `High ${formatNumber(maxValue(seaTemps), 1)} F`
+          ],
+          details: [
+            `Average sea surface temperature is ${formatNumber(average(seaTemps), 1)} F.`,
+            `Reported range spans ${formatNumber(minValue(seaTemps), 1)} to ${formatNumber(maxValue(seaTemps), 1)} F.`,
+            `Use this as comfort context rather than a standalone decision signal.`
+          ],
+          availabilityNote: seaTemps.length ? "" : "Sea-surface temperature was not returned for this date.",
+          hasChartData: seaTemps.length > 0,
+          emptyText: "Water-temperature chart unavailable for this date.",
+          hourlyHtml: buildHourlyList(marineHourly.filter((row) => row.seaTempF != null), (row) => `${formatTime(row.time)} - ${formatNumber(row.seaTempF, 1)} F`)
+        }
+      };
     }
 
     function destroyChart(chart) {
-      if (chart) {
-        chart.destroy();
-      }
+      if (chart) chart.destroy();
       return null;
     }
 
-    function commonChartOptions(yTitle) {
+    function destroyAllCharts() {
+      Object.keys(state.charts).forEach((key) => {
+        state.charts[key] = destroyChart(state.charts[key]);
+      });
+      state.charts = {};
+    }
+
+    function commonChartOptions(yTitle, compact = false) {
       return {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: { position: "top" }
+          legend: {
+            position: "top",
+            labels: {
+              boxWidth: compact ? 10 : 14,
+              font: { size: compact ? 10 : 12 }
+            }
+          }
         },
         scales: {
+          x: {
+            ticks: {
+              maxTicksLimit: compact ? 8 : 12
+            }
+          },
           y: {
             title: { display: true, text: yTitle }
           }
@@ -1772,23 +2094,23 @@
       };
     }
 
-    function renderCharts(condition) {
+    function mountChart(chartKey, canvasId, condition, compact = false) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
       const tideHourly = condition.tides.hourly;
       const marineHourly = condition.marine.hourly;
       const weatherHourly = condition.weather.hourly;
+      state.charts[canvasId] = destroyChart(state.charts[canvasId]);
 
-      const tideLabels = tideHourly.map((row) => formatHourLabel(row.time));
-      const tideHeights = tideHourly.map((row) => row.heightFt);
-
-      state.charts.tide = destroyChart(state.charts.tide);
-      if (tideHourly.length) {
-        state.charts.tide = new Chart(document.getElementById("tideChart"), {
+      if (chartKey === "tide" && tideHourly.length) {
+        state.charts[canvasId] = new Chart(canvas, {
           type: "line",
           data: {
-            labels: tideLabels,
+            labels: tideHourly.map((row) => formatHourLabel(row.time)),
             datasets: [{
               label: "Tide height (ft)",
-              data: tideHeights,
+              data: tideHourly.map((row) => row.heightFt),
               borderColor: "#1f5f7a",
               backgroundColor: "rgba(31, 95, 122, 0.18)",
               borderWidth: 2,
@@ -1796,19 +2118,12 @@
               tension: 0.28
             }]
           },
-          options: commonChartOptions("Feet")
+          options: commonChartOptions("Feet", compact)
         });
-
-        const lows = condition.tides.highsLows.filter((x) => x.type === "L");
-        const highs = condition.tides.highsLows.filter((x) => x.type === "H");
-        el.tideSummary.textContent = `Lows: ${lows.map((x) => `${formatTime(x.time)} (${formatNumber(x.heightFt)} ft)`).join("; ") || "n/a"}. Highs: ${highs.map((x) => `${formatTime(x.time)} (${formatNumber(x.heightFt)} ft)`).join("; ") || "n/a"}.`;
-      } else {
-        el.tideSummary.textContent = "Tide chart unavailable for this date. High/low tide list may still be available in summary.";
       }
 
-      state.charts.wave = destroyChart(state.charts.wave);
-      if (marineHourly.length) {
-        state.charts.wave = new Chart(document.getElementById("waveChart"), {
+      if (chartKey === "wave" && marineHourly.length) {
+        state.charts[canvasId] = new Chart(canvas, {
           type: "line",
           data: {
             labels: marineHourly.map((row) => formatHourLabel(row.time)),
@@ -1825,24 +2140,18 @@
                 label: "Swell height (ft)",
                 data: marineHourly.map((row) => row.swellFt),
                 borderColor: "#c97347",
-                backgroundColor: "rgba(201, 115, 71, 0.1)",
+                backgroundColor: "rgba(201, 115, 71, 0.08)",
                 borderWidth: 2,
                 tension: 0.25
               }
             ]
           },
-          options: commonChartOptions("Feet")
+          options: commonChartOptions("Feet", compact)
         });
-
-        const swellPeriod = average(marineHourly.map((x) => x.swellPeriodSec));
-        el.waveSummary.textContent = `Avg wave ${formatNumber(average(marineHourly.map((x) => x.waveFt)))} ft, avg swell ${formatNumber(average(marineHourly.map((x) => x.swellFt)))} ft, avg swell period ${formatNumber(swellPeriod, 0)} sec.`;
-      } else {
-        el.waveSummary.textContent = "Wave and swell chart unavailable because marine data was not returned.";
       }
 
-      state.charts.wind = destroyChart(state.charts.wind);
-      if (weatherHourly.length) {
-        state.charts.wind = new Chart(document.getElementById("windChart"), {
+      if (chartKey === "wind" && weatherHourly.length) {
+        state.charts[canvasId] = new Chart(canvas, {
           type: "line",
           data: {
             labels: weatherHourly.map((row) => formatHourLabel(row.time)),
@@ -1851,7 +2160,7 @@
                 label: "Wind speed (mph)",
                 data: weatherHourly.map((row) => row.windMph),
                 borderColor: "#1d6a4d",
-                backgroundColor: "rgba(29, 106, 77, 0.11)",
+                backgroundColor: "rgba(29, 106, 77, 0.12)",
                 borderWidth: 2,
                 tension: 0.25
               },
@@ -1859,23 +2168,18 @@
                 label: "Wind gusts (mph)",
                 data: weatherHourly.map((row) => row.gustMph),
                 borderColor: "#8b6a1e",
-                backgroundColor: "rgba(139, 106, 30, 0.1)",
+                backgroundColor: "rgba(139, 106, 30, 0.08)",
                 borderWidth: 2,
                 tension: 0.25
               }
             ]
           },
-          options: commonChartOptions("Miles per hour")
+          options: commonChartOptions("Miles per hour", compact)
         });
-
-        el.windSummary.textContent = `Average wind ${formatNumber(average(weatherHourly.map((x) => x.windMph)), 0)} mph with gust peaks near ${formatNumber(maxValue(weatherHourly.map((x) => x.gustMph)), 0)} mph.`;
-      } else {
-        el.windSummary.textContent = "Wind chart unavailable because weather hourly data was not returned.";
       }
 
-      state.charts.weather = destroyChart(state.charts.weather);
-      if (weatherHourly.length) {
-        state.charts.weather = new Chart(document.getElementById("weatherChart"), {
+      if (chartKey === "weather" && weatherHourly.length) {
+        state.charts[canvasId] = new Chart(canvas, {
           type: "line",
           data: {
             labels: weatherHourly.map((row) => formatHourLabel(row.time)),
@@ -1893,7 +2197,7 @@
                 label: "Air temperature (F)",
                 data: weatherHourly.map((row) => row.tempF),
                 borderColor: "#c97347",
-                backgroundColor: "rgba(201, 115, 71, 0.1)",
+                backgroundColor: "rgba(201, 115, 71, 0.08)",
                 borderWidth: 2,
                 yAxisID: "y1",
                 tension: 0.2
@@ -1904,8 +2208,21 @@
             responsive: true,
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
-            plugins: { legend: { position: "top" } },
+            plugins: {
+              legend: {
+                position: "top",
+                labels: {
+                  boxWidth: compact ? 10 : 14,
+                  font: { size: compact ? 10 : 12 }
+                }
+              }
+            },
             scales: {
+              x: {
+                ticks: {
+                  maxTicksLimit: compact ? 8 : 12
+                }
+              },
               y: {
                 type: "linear",
                 position: "left",
@@ -1922,93 +2239,155 @@
             }
           }
         });
-
-        el.weatherSummary.textContent = `Rain max ${formatNumber(maxValue(weatherHourly.map((x) => x.rainChance)), 0)}%, temp range ${formatNumber(minValue(weatherHourly.map((x) => x.tempF)), 0)} to ${formatNumber(maxValue(weatherHourly.map((x) => x.tempF)), 0)} F.`;
-      } else {
-        el.weatherSummary.textContent = "Rain and temperature chart unavailable because weather data was not returned.";
       }
 
-      const seaTemps = marineHourly.map((x) => x.seaTempF).filter((x) => x != null);
-      state.charts.waterTemp = destroyChart(state.charts.waterTemp);
-      if (seaTemps.length) {
-        el.waterTempCard.hidden = false;
-        state.charts.waterTemp = new Chart(document.getElementById("waterTempChart"), {
-          type: "line",
-          data: {
-            labels: marineHourly.map((row) => formatHourLabel(row.time)),
-            datasets: [{
-              label: "Sea surface temp (F)",
-              data: marineHourly.map((row) => row.seaTempF),
-              borderColor: "#1f5f7a",
-              backgroundColor: "rgba(31, 95, 122, 0.1)",
-              borderWidth: 2,
-              fill: true,
-              tension: 0.25
-            }]
-          },
-          options: commonChartOptions("Degrees F")
-        });
-        el.waterTempSummary.textContent = `Sea surface temperature average ${formatNumber(average(seaTemps), 1)} F.`;
-      } else {
-        el.waterTempCard.hidden = true;
+      if (chartKey === "waterTemp") {
+        const rows = marineHourly.filter((row) => row.seaTempF != null);
+        if (rows.length) {
+          state.charts[canvasId] = new Chart(canvas, {
+            type: "line",
+            data: {
+              labels: rows.map((row) => formatHourLabel(row.time)),
+              datasets: [{
+                label: "Sea surface temp (F)",
+                data: rows.map((row) => row.seaTempF),
+                borderColor: "#1f5f7a",
+                backgroundColor: "rgba(31, 95, 122, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.25
+              }]
+            },
+            options: commonChartOptions("Degrees F", compact)
+          });
+        }
       }
     }
 
-    // =========================
-    // Message generation
-    // =========================
-    function tideWindowAround(time) {
-      if (!time) return "No reliable low tide window available";
-      const start = new Date(time.getTime() - (60 * 60 * 1000));
-      const end = new Date(time.getTime() + (60 * 60 * 1000));
-      return `${formatTime(start)}-${formatTime(end)}`;
+    function renderModuleCards(targetEl, modules, detailed = false) {
+      targetEl.innerHTML = modules.map((module) => {
+        const canvasId = `${targetEl.id}-${module.key}-chart`;
+        const chartMarkup = module.hasChartData
+          ? `<canvas id="${canvasId}" aria-label="${module.title} chart" role="img"></canvas>`
+          : `<div class="chart-empty">${module.emptyText}</div>`;
+
+        return `
+          <article class="panel module-card ${detailed ? "is-detailed" : "is-compact"}">
+            <div class="module-copy">
+              <p class="module-kicker">${module.kicker}</p>
+              <h3>${module.title}</h3>
+              <p class="module-recommendation">${module.recommendation}</p>
+              <div class="stat-pills">${module.pills.map((pill) => `<span class="stat-pill">${pill}</span>`).join("")}</div>
+              <ul class="detail-list">${module.details.map((line) => `<li>${line}</li>`).join("")}</ul>
+              ${module.availabilityNote ? `<p class="availability-note">${module.availabilityNote}</p>` : ""}
+              ${detailed ? module.hourlyHtml : ""}
+            </div>
+            <div class="chart-wrap">${chartMarkup}</div>
+          </article>
+        `;
+      }).join("");
+
+      modules.forEach((module) => {
+        if (!module.hasChartData) return;
+        mountChart(module.chartKey, `${targetEl.id}-${module.key}-chart`, state.condition, !detailed);
+      });
+    }
+
+    function parseRoute() {
+      const hash = window.location.hash.replace(/^#\/?/, "");
+      if (!hash) return { view: "overview", activity: null };
+      const match = hash.match(/^activity\/(.+)$/);
+      if (!match) return { view: "overview", activity: null };
+      const activity = getActivityBySlug(match[1]);
+      return activity ? { view: "activity", activity } : { view: "overview", activity: null };
+    }
+
+    function applyRoute(route) {
+      state.currentView = route.view;
+      state.selectedActivity = route.activity || null;
+      el.overviewView.hidden = route.view !== "overview";
+      el.activityView.hidden = route.view !== "activity";
+      renderActivityNav();
+      if (state.condition) {
+        renderCurrentView(state.condition);
+      }
     }
 
     function buildTidepoolMessage(condition) {
       const bestLow = condition.tides.bestLow;
       const metrics = summarizeCoreMetrics(condition);
-      const locationLabel = `${condition.place.name} (${condition.place.zone})`;
-      const lowText = bestLow
-        ? `${formatTime(bestLow.time)} low tide near ${formatNumber(bestLow.heightFt)} ft`
-        : "no reliable low tide reading";
-
       return [
-        "Tide-pool idea for this homeschool week:",
-        locationLabel,
+        `Homeschool tide-pool plan for ${formatDate(fromYmd(condition.date))}`,
+        `${condition.place.name} (${condition.place.zone})`,
         "",
-        `Best window: ${tideWindowAround(bestLow ? bestLow.time : null)}, centered around ${lowText}.`,
-        `Forecast snapshot: waves around ${formatNumber(metrics.avgWave)} ft, wind around ${formatNumber(metrics.avgWind, 0)} mph, rain chance up to ${formatNumber(metrics.maxRainChance, 0)}%.`,
-        "",
-        "Please check official San Diego County water-quality status before entering the water, and follow posted signs and lifeguard guidance.",
-        "Safety reminder: rocks are slippery, waves can surprise kids, and close supervision is essential.",
-        "Homeschool idea: bring a notebook, sketch three organisms, then leave everything where you found it."
+        `Best window: ${tideWindowAround(bestLow ? bestLow.time : null)} around ${bestLow ? `${formatTime(bestLow.time)} low tide near ${formatNumber(bestLow.heightFt)} ft` : "the best available low tide"}.`,
+        `Forecast snapshot: wave avg ${formatNumber(metrics.avgWave)} ft, wind avg ${formatNumber(metrics.avgWind, 0)} mph, rain max ${formatNumber(metrics.maxRainChance, 0)}%.`,
+        "Please verify official water-quality status and follow posted signs and lifeguard guidance before entering the water.",
+        "Group note: rocks are slippery, sets can surprise kids, and close supervision is essential."
       ].join("\n");
     }
 
-    function buildBeachMessage(condition) {
+    function buildSnorkelMessage(condition) {
       const metrics = summarizeCoreMetrics(condition);
       return [
-        `Family beach plan for ${formatDate(fromYmd(condition.date))}: ${condition.place.name}.`,
-        `Beach-day rating: ${condition.ratings.beachDay.label}.`,
-        `Air ${formatNumber(metrics.minTemp, 0)} to ${formatNumber(metrics.maxTemp, 0)} F, wind about ${formatNumber(metrics.avgWind, 0)} mph, rain chance up to ${formatNumber(metrics.maxRainChance, 0)}%.`,
-        "Before heading out, verify beach conditions, posted signage, and official water-quality updates: https://www.sdbeachinfo.com/."
+        `Homeschool snorkel / coastal science plan for ${formatDate(fromYmd(condition.date))}`,
+        `${condition.place.name} (${condition.place.zone})`,
+        "",
+        `Current outlook: ${condition.ratings.snorkelDive.label}. Wave avg ${formatNumber(metrics.avgWave)} ft, wind avg ${formatNumber(metrics.avgWind, 0)} mph, water temp about ${formatNumber(average(condition.marine.hourly.map((row) => row.seaTempF).filter((value) => value != null)), 1)} F when reported.`,
+        "Please verify water quality, posted conditions, and live visibility before committing to an in-water lesson.",
+        "Group note: masks, fins, layered warmth, and a shore-based fallback plan are recommended."
       ].join("\n");
     }
 
-    function buildBeginnerSurfMessage(condition) {
-      const metrics = summarizeCoreMetrics(condition);
-      return [
-        `Beginner surf check for ${condition.place.name}: ${condition.ratings.kidsSurf.label}.`,
-        `Expected waves around ${formatNumber(metrics.avgWave)} ft with average wind near ${formatNumber(metrics.avgWind, 0)} mph.`,
-        "Please choose a guarded area, keep close supervision, and check water-quality plus live beach observations before paddling out.",
-        `Official water-quality page: ${condition.waterQuality.url}`
-      ].join("\n");
+    function buildActivityMessage(condition, activity) {
+      if (!activity || !activity.isHomeschool) return "";
+      if (activity.slug === "snorkel-dive") return buildSnorkelMessage(condition);
+      return buildTidepoolMessage(condition);
     }
 
-    function renderMessages(condition) {
-      el.tidepoolMessage.value = buildTidepoolMessage(condition);
-      el.beachMessage.value = buildBeachMessage(condition);
-      el.surfMessage.value = buildBeginnerSurfMessage(condition);
+    function renderActivityView(condition) {
+      const activity = state.selectedActivity;
+      if (!activity) return;
+      const rating = condition.ratings[activity.ratingKey];
+      const catalog = buildReportCatalog(condition);
+      const modules = activity.reportKeys.map((key) => catalog[key]).filter(Boolean);
+
+      el.activityTitle.textContent = `${activity.title} at ${condition.place.name}`;
+      el.activityIntro.textContent = activity.intro;
+      el.activityHighlights.innerHTML = [
+        { label: "Recommendation", value: rating.label, note: rating.reason },
+        { label: "Best timing", value: activity.slug === "tide-pools" ? tideWindowAround(condition.tides.bestLow ? condition.tides.bestLow.time : null) : formatDate(fromYmd(condition.date)), note: activity.slug === "tide-pools" ? "Use the low-tide window as the anchor." : "Use the detailed modules below to narrow the best hour." },
+        { label: "Water quality", value: condition.waterQuality.label, note: "Always confirm the official county source before entering the water." }
+      ].map((card) => `
+        <article class="metric-card">
+          <p class="metric-label">${card.label}</p>
+          <p class="metric-value">${card.value}</p>
+          <p class="metric-note">${card.note}</p>
+        </article>
+      `).join("");
+
+      renderModuleCards(el.activityReports, modules, true);
+
+      const message = buildActivityMessage(condition, activity);
+      el.messageSection.hidden = !message;
+      el.activityMessage.value = message;
+    }
+
+    function renderOverview(condition) {
+      const catalog = buildReportCatalog(condition);
+      const overviewModules = ["tide", "marine", "wind", "weather"].map((key) => catalog[key]).filter(Boolean);
+      renderModuleCards(el.overviewReports, overviewModules, false);
+    }
+
+    function renderCurrentView(condition) {
+      destroyAllCharts();
+      renderContextHeader(condition);
+      renderActivitySummaryStrip(condition);
+      if (state.currentView === "activity") {
+        renderActivityView(condition);
+      } else {
+        renderOverview(condition);
+      }
     }
 
     // =========================
@@ -2018,19 +2397,13 @@
       state.mapMarkers.forEach((marker, placeId) => {
         const markerEl = marker.getElement();
         if (!markerEl) return;
-        if (placeId === place.id) {
-          markerEl.style.filter = "hue-rotate(0deg) saturate(1.2)";
-        } else {
-          markerEl.style.filter = "grayscale(0.2)";
-        }
+        markerEl.style.filter = placeId === place.id ? "hue-rotate(0deg) saturate(1.15)" : "grayscale(0.2)";
       });
     }
 
     function setSelectedPlace(place, fromMapClick = false) {
       state.selectedPlace = place;
-      if (!fromMapClick && place.id !== "custom") {
-        el.placeSelect.value = place.id;
-      }
+      renderPlaceSelect();
       renderSelectedPlaceMeta();
 
       if (state.map) {
@@ -2047,14 +2420,18 @@
         }
       }
 
+      if (!fromMapClick && place.id !== "custom") {
+        el.placeSelect.value = place.id;
+      }
+
       focusMarkerForPlace(place);
     }
 
     function initMap() {
       if (typeof window.L === "undefined") {
         const mapEl = document.getElementById("map");
-        mapEl.innerHTML = '<div style="display:grid;place-items:center;height:100%;padding:18px;text-align:center;color:var(--muted);background:var(--surface-alt);">Map could not load. The rest of the planner can still run, but map selection is unavailable right now.</div>';
-        setStatus("Leaflet did not load, so map selection is disabled. The rest of the planner can still run.");
+        mapEl.innerHTML = '<div style="display:grid;place-items:center;height:100%;padding:18px;text-align:center;color:var(--muted);background:var(--surface-alt);">Map could not load. The rest of the planner can still run, but custom map selection is unavailable right now.</div>';
+        setStatus("Leaflet did not load, so custom map selection is disabled. The planner can still run.");
         return;
       }
 
@@ -2067,13 +2444,14 @@
       PLACES.forEach((place) => {
         const marker = L.marker([place.lat, place.lon]).addTo(state.map);
         marker.bindPopup(`<strong>${place.name}</strong><br>${place.zone}<br>${place.notes}`);
-        marker.on("click", () => {
+        marker.on("click", async () => {
           setSelectedPlace(place);
+          await refreshPlanner();
         });
         state.mapMarkers.set(place.id, marker);
       });
 
-      state.map.on("click", (event) => {
+      state.map.on("click", async (event) => {
         const lat = Number(event.latlng.lat.toFixed(5));
         const lon = Number(event.latlng.lng.toFixed(5));
         const custom = {
@@ -2086,6 +2464,7 @@
           notes: "Selected by map click."
         };
         setSelectedPlace(custom, true);
+        await refreshPlanner();
       });
 
       setTimeout(() => {
@@ -2096,6 +2475,37 @@
     // =========================
     // Event handlers
     // =========================
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text || "");
+        setStatus("Copied to clipboard.");
+      } catch (error) {
+        setStatus("Could not copy automatically. Select and copy manually.");
+      }
+    }
+
+    async function refreshAvailableDates() {
+      try {
+        const availability = await fetchAvailableDatesForPlace(state.selectedPlace);
+        state.availableDates = availability.dates.length ? availability.dates : [dateInputValue()];
+        state.availability = {
+          weatherEnd: availability.weatherEnd,
+          marineEnd: availability.marineEnd
+        };
+      } catch (error) {
+        state.availableDates = [state.selectedDate || dateInputValue()];
+        state.availability = {
+          weatherEnd: null,
+          marineEnd: null
+        };
+        setStatus(`Could not refresh forecast range: ${error.message}`);
+      }
+
+      state.selectedDate = resolveAvailableDate(state.selectedDate || dateInputValue());
+      renderDateOptions();
+      renderForecastRangeText();
+    }
+
     function setDateQuick(mode) {
       const today = fromYmd(dateInputValue());
       let target = new Date(today);
@@ -2110,23 +2520,9 @@
         target.setDate(target.getDate() + daysUntilSaturday);
       }
 
-      const nextValue = toYmd(target);
-      el.dateInput.value = nextValue;
-      state.selectedDate = nextValue;
-
-      [el.btnToday, el.btnTomorrow, el.btnWeekend].forEach((btn) => btn.classList.remove("is-active"));
-      if (mode === "today") el.btnToday.classList.add("is-active");
-      if (mode === "tomorrow") el.btnTomorrow.classList.add("is-active");
-      if (mode === "weekend") el.btnWeekend.classList.add("is-active");
-    }
-
-    async function copyText(text) {
-      try {
-        await navigator.clipboard.writeText(text || "");
-        setStatus("Message copied to clipboard.");
-      } catch (error) {
-        setStatus("Could not copy automatically. Select and copy manually.");
-      }
+      state.selectedDate = resolveAvailableDate(target);
+      el.dateInput.value = state.selectedDate;
+      markQuickDate(mode);
     }
 
     async function updateConditions() {
@@ -2139,10 +2535,7 @@
         const condition = await buildCondition(state.selectedPlace, dateYmd);
         state.condition = condition;
         renderSummary(condition);
-        renderReports(condition);
-        renderRatings(condition);
-        renderCharts(condition);
-        renderMessages(condition);
+        renderCurrentView(condition);
         setStatus(`Updated ${new Date().toLocaleString()}.`);
       } catch (error) {
         console.error(error);
@@ -2152,43 +2545,74 @@
       }
     }
 
+    async function refreshPlanner() {
+      await refreshAvailableDates();
+      await updateConditions();
+    }
+
+    function syncRouteFromHash() {
+      applyRoute(parseRoute());
+    }
+
+    function setLocation(locationId) {
+      state.selectedLocationId = locationId;
+      const places = getPlacesForLocation(locationId);
+      if (!places.some((place) => place.id === state.selectedPlace.id)) {
+        state.selectedPlace = places[0] || PLACES[0];
+      }
+      renderLocationSelect();
+      renderPlaceSelect();
+      renderSelectedPlaceMeta();
+      focusMarkerForPlace(state.selectedPlace);
+    }
+
     function wireEvents() {
-      el.placeSelect.addEventListener("change", () => {
-        const place = getPlaceById(el.placeSelect.value);
+      el.zoneSelect.addEventListener("change", async () => {
+        setLocation(el.zoneSelect.value);
+        await refreshPlanner();
+      });
+
+      el.placeSelect.addEventListener("change", async () => {
+        const place = getPlaceById(el.placeSelect.value) || (state.selectedPlace.id === "custom" ? state.selectedPlace : null);
         if (place) {
           setSelectedPlace(place);
+          await refreshPlanner();
         }
       });
 
-      el.dateInput.addEventListener("change", () => {
+      el.dateInput.addEventListener("change", async () => {
         state.selectedDate = el.dateInput.value;
+        markQuickDate("");
+        await updateConditions();
       });
 
-      el.viewSelect.addEventListener("change", () => {
-        applyViewMode(el.viewSelect.value);
+      el.btnToday.addEventListener("click", async () => {
+        setDateQuick("today");
+        await updateConditions();
       });
-
-      el.btnToday.addEventListener("click", () => setDateQuick("today"));
-      el.btnTomorrow.addEventListener("click", () => setDateQuick("tomorrow"));
-      el.btnWeekend.addEventListener("click", () => setDateQuick("weekend"));
+      el.btnTomorrow.addEventListener("click", async () => {
+        setDateQuick("tomorrow");
+        await updateConditions();
+      });
+      el.btnWeekend.addEventListener("click", async () => {
+        setDateQuick("weekend");
+        await updateConditions();
+      });
       el.updateBtn.addEventListener("click", updateConditions);
-
-      el.copyTidepool.addEventListener("click", () => copyText(el.tidepoolMessage.value));
-      el.copyBeach.addEventListener("click", () => copyText(el.beachMessage.value));
-      el.copySurf.addEventListener("click", () => copyText(el.surfMessage.value));
+      el.copyActivityMessage.addEventListener("click", () => copyText(el.activityMessage.value));
+      window.addEventListener("hashchange", syncRouteFromHash);
     }
 
     // =========================
     // Init
     // =========================
-    function init() {
-      renderPlaceSelect();
-      applyViewMode("summary");
-      const initialDate = dateInputValue();
-      el.dateInput.value = initialDate;
-      state.selectedDate = initialDate;
-      setDateQuick("today");
-      renderSelectedPlaceMeta();
+    async function init() {
+      renderLocationSelect();
+      renderActivityNav();
+      state.selectedDate = dateInputValue();
+      setLocation(DEFAULT_LOCATION_ID);
+      renderDateOptions();
+      markQuickDate("today");
 
       if (window.location.protocol === "file:") {
         setStatus("This page is being opened from file://. Remote API calls and map tiles are often restricted there. Use GitHub Pages or a local web server for normal operation.");
@@ -2196,7 +2620,8 @@
 
       initMap();
       wireEvents();
-      updateConditions();
+      syncRouteFromHash();
+      await refreshPlanner();
     }
 
     init();

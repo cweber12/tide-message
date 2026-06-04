@@ -5,23 +5,25 @@ Date: 2026-06-04
 
 ## Foundation
 
-- [x] **Apply new tokenized visual system**: Replace existing page styling with a fully new clean professional theme using the new token philosophy (typography, surfaces, spacing, hierarchy). Done looks like a distinct visual identity with no carryover of old card styling. _Reuses: existing single-file architecture. Modifies: root CSS, layout classes, headings, controls._
-- [x] **Create top-level view architecture**: Add dropdown-based view switch for Summary, Reports, and Activities with Summary as landing default. Done looks like deterministic section toggling with preserved state after updates. _Modifies: controls panel + section visibility logic._
+- [ ] **Establish overview/activity shell**: Rework the page into a left-nav plus content layout with a shared filter bar and Overview as the default route. _Reuses: existing single-file architecture, current state object. Modifies: markup, layout CSS, route/view logic._
+- [ ] **Retune the dashboard aesthetic**: Tighten the current tokenized visual system into a calmer, more professional Swiss-editorial dashboard with stronger hierarchy and less peripheral clutter. _Reuses: existing font and token setup. Modifies: root CSS, panels, nav, cards, and section headers._
 
 ## Core UI
 
-- [x] **Refactor reports presentation**: Rebuild report sections so each area shows concise data and one suggestion line, with no oversized red prohibition language. Done looks like calm data-first report cards. _Modifies: summary/report rendering functions and report markup._
-- [x] **Fix chart sizing permanently**: Ensure all condition charts use fixed-height wrappers and cannot vertically creep on repeated updates. Done looks like stable chart height after multiple refreshes/date switches. _Modifies: chart CSS + chart initialization lifecycle._
+- [ ] **Build grouped landing modules**: Replace separate charts and reports areas with compact modules where each report is paired with its related small chart and scan-friendly summary. _Modifies: chart markup, report rendering, overview structure._
+- [ ] **Create dedicated activity views**: Add hash-routed activity pages/views that show only the detailed reports and charts relevant to the selected activity. _Depends on: Establish overview/activity shell._
+- [ ] **Replace location handling with location-first filtering**: Add a location selector that defaults to La Jolla, then scope place selection and loaded content to that location. _Modifies: place controls, state defaults, selected-place logic._
 
-## Interactions and States
+## Interactions & States
 
-- [x] **Add per-section hourly drilldown**: Provide a View hourly data toggle per report section when hourly data exists. Done looks like collapsed-by-default details with accessible summary labels and table/list output. _New interaction. Depends on reports refactor._
-- [x] **Improve activity suggestion accuracy**: Update activity scoring language and thresholds so tidepool logic prioritizes low tides and all activity suggestions stay practical and non-alarmist. Done looks like section-level activity guidance with confidence and official-source reminders. _Modifies: scoring + rendering copy._
+- [ ] **Implement forecast-aware date selection**: Populate date choices from today through the furthest forecast date returned by weather or marine APIs, while allowing partial rendering when one source is missing for a later date. Covers: initial load, future dates, partial-data notes, unavailable-date fallback.
+- [ ] **Tailor reports and messages by activity**: Define which metrics, charts, and copyable group chat messages belong to each activity, with homeschool message tools shown only where relevant. _Modifies: activity metadata, render functions, clipboard behavior._
+- [ ] **De-emphasize secondary tools without removing them**: Move the map/custom-location workflow and source links into quieter supporting panels so the main decision path stays clean. _Modifies: page hierarchy and panel treatments._
 
-## Responsive and Polish
+## Responsive & Polish
 
-- [x] **Finalize responsive pass for new design**: Validate mobile-first spacing, 44px+ targets, and legible section density across breakpoints. _Modifies: media queries and section grids._
-- [x] **Accessibility pass**: Verify keyboard operability, focus styling, readable status text, and non-color-only status cues. _Modifies: ARIA labels and focus states as needed._
+- [ ] **Responsive pass for nav and modules**: Ensure the left activity nav becomes a usable mobile text rail and that overview/activity modules remain readable from 375px upward. Breakpoints: mobile, tablet, desktop.
+- [ ] **Accessibility pass**: Verify `aria-current`, keyboard navigation, focus states, chart labels, and explicit partial-data messaging against the brief.
 
 ## Review
 
