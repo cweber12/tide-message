@@ -263,18 +263,38 @@
       padding-left: 20px;
     }
 
-    .ratings-grid {
+    .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 12px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .dashboard-panel {
+      min-width: 0;
+    }
+
+    .sidebar-panel {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .sidebar-panel h2 {
+      margin-bottom: 14px;
+    }
+
+    .ratings-grid {
+      display: block;
     }
 
     .rating-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      background: #f9fbfd;
-      padding: 14px;
-      min-height: 124px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      padding: 0 0 14px;
+      margin-bottom: 14px;
+      min-height: 0;
     }
 
     .rating-title {
@@ -341,16 +361,22 @@
     }
 
     .report-grid {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 14px;
+      display: block;
+      margin-bottom: 0;
     }
 
     .report-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      background: #f9fbfd;
-      padding: 12px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      padding: 0 0 14px;
+      margin-bottom: 14px;
+    }
+
+    .report-card:last-child,
+    .rating-card:last-child {
+      margin-bottom: 0;
     }
 
     .report-row {
@@ -383,6 +409,27 @@
       padding-left: 18px;
       color: var(--muted);
       font-size: 0.88rem;
+    }
+
+    .dashboard-grid.is-activities-page .chart-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .dashboard-grid.is-activities-page .chart-frame {
+      height: 320px;
+      max-height: 320px;
+    }
+
+    .dashboard-grid.is-activities-page .sidebar-panel {
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dashboard-grid.is-activities-page .report-card,
+    .dashboard-grid.is-activities-page .rating-card {
+      padding-bottom: 18px;
+      margin-bottom: 18px;
     }
 
     .message-grid {
@@ -443,12 +490,21 @@
         grid-template-columns: 1fr 1fr;
       }
 
-      .ratings-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .dashboard-grid {
+        grid-template-columns: minmax(240px, 0.9fr) minmax(0, 1.7fr) minmax(260px, 1fr);
+        gap: 18px;
       }
 
-      .report-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      #activitiesSection {
+        grid-column: 1;
+      }
+
+      #chartsSection {
+        grid-column: 2;
+      }
+
+      #reportsSection {
+        grid-column: 3;
       }
 
       .chart-grid {
@@ -466,15 +522,32 @@
       .chart-frame {
         height: var(--chart-height);
       }
+
+      .dashboard-grid.is-activities-page {
+        grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+      }
+
+      .dashboard-grid.is-activities-page #activitiesSection {
+        grid-column: 1;
+      }
+
+      .dashboard-grid.is-activities-page #reportsSection {
+        grid-column: 2;
+      }
+
+      .dashboard-grid.is-activities-page #chartsSection {
+        grid-column: 1 / -1;
+      }
+
+      .dashboard-grid.is-activities-page .chart-frame {
+        height: 420px;
+        max-height: 420px;
+      }
     }
 
     @media (min-width: 1024px) {
-      .ratings-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .report-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+      .dashboard-grid.is-activities-page .chart-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
@@ -514,9 +587,8 @@
             <select id="placeSelect" aria-label="Select a saved location"></select>
             <label for="viewSelect">View</label>
             <select id="viewSelect" aria-label="Select planner view">
-              <option value="summary">Overall summary</option>
-              <option value="reports">Reports</option>
-              <option value="activities">Activities</option>
+              <option value="summary">Overview</option>
+              <option value="activities">Activities page</option>
             </select>
             <button id="updateBtn" class="primary" type="button">Update conditions</button>
           </div>
@@ -538,47 +610,49 @@
         <ul id="warningList" class="warning-list"></ul>
       </section>
 
-      <section id="activitiesSection" class="panel full" aria-label="Activity ratings" hidden>
-        <h2>Activity Guidance</h2>
-        <p class="small-note">Always check official San Diego County Beach and Bay water-quality status before entering the water. This page summarizes forecast conditions but does not replace beach closures, posted signs, lifeguards, or official advisories.</p>
-        <div id="ratingsGrid" class="ratings-grid"></div>
-      </section>
+      <div id="dashboardSection" class="full dashboard-grid">
+        <section id="activitiesSection" class="panel dashboard-panel sidebar-panel" aria-label="Activity ratings">
+          <h2>Activity Guidance</h2>
+          <p class="small-note">Always check official San Diego County Beach and Bay water-quality status before entering the water. This page summarizes forecast conditions but does not replace beach closures, posted signs, lifeguards, or official advisories.</p>
+          <div id="ratingsGrid" class="ratings-grid"></div>
+        </section>
 
-      <section id="reportsSection" class="panel full" aria-label="Reports" hidden>
-        <h2>Reports</h2>
-        <div id="reportSections" class="report-grid"></div>
-      </section>
+        <section id="chartsSection" class="panel dashboard-panel chart-panel" aria-label="Charts">
+          <h2>Condition Charts</h2>
+          <div class="chart-grid">
+            <article class="chart-card">
+              <h3>Tide Height</h3>
+              <div class="chart-frame"><canvas id="tideChart" aria-label="Tide chart" role="img"></canvas></div>
+              <p id="tideSummary" class="small-note"></p>
+            </article>
+            <article class="chart-card">
+              <h3>Wave And Swell</h3>
+              <div class="chart-frame"><canvas id="waveChart" aria-label="Wave and swell chart" role="img"></canvas></div>
+              <p id="waveSummary" class="small-note"></p>
+            </article>
+            <article class="chart-card">
+              <h3>Wind</h3>
+              <div class="chart-frame"><canvas id="windChart" aria-label="Wind chart" role="img"></canvas></div>
+              <p id="windSummary" class="small-note"></p>
+            </article>
+            <article class="chart-card">
+              <h3>Rain Probability And Temperature</h3>
+              <div class="chart-frame"><canvas id="weatherChart" aria-label="Rain and temperature chart" role="img"></canvas></div>
+              <p id="weatherSummary" class="small-note"></p>
+            </article>
+            <article class="chart-card" id="waterTempCard" hidden>
+              <h3>Sea Surface Temperature</h3>
+              <div class="chart-frame"><canvas id="waterTempChart" aria-label="Sea temperature chart" role="img"></canvas></div>
+              <p id="waterTempSummary" class="small-note"></p>
+            </article>
+          </div>
+        </section>
 
-      <section id="chartsSection" class="panel full" aria-label="Charts" hidden>
-        <h2>Condition Charts</h2>
-        <div class="chart-grid">
-          <article class="chart-card">
-            <h3>Tide Height</h3>
-            <div class="chart-frame"><canvas id="tideChart" aria-label="Tide chart" role="img"></canvas></div>
-            <p id="tideSummary" class="small-note"></p>
-          </article>
-          <article class="chart-card">
-            <h3>Wave And Swell</h3>
-            <div class="chart-frame"><canvas id="waveChart" aria-label="Wave and swell chart" role="img"></canvas></div>
-            <p id="waveSummary" class="small-note"></p>
-          </article>
-          <article class="chart-card">
-            <h3>Wind</h3>
-            <div class="chart-frame"><canvas id="windChart" aria-label="Wind chart" role="img"></canvas></div>
-            <p id="windSummary" class="small-note"></p>
-          </article>
-          <article class="chart-card">
-            <h3>Rain Probability And Temperature</h3>
-            <div class="chart-frame"><canvas id="weatherChart" aria-label="Rain and temperature chart" role="img"></canvas></div>
-            <p id="weatherSummary" class="small-note"></p>
-          </article>
-          <article class="chart-card" id="waterTempCard" hidden>
-            <h3>Sea Surface Temperature</h3>
-            <div class="chart-frame"><canvas id="waterTempChart" aria-label="Sea temperature chart" role="img"></canvas></div>
-            <p id="waterTempSummary" class="small-note"></p>
-          </article>
-        </div>
-      </section>
+        <section id="reportsSection" class="panel dashboard-panel sidebar-panel" aria-label="Reports">
+          <h2>Reports</h2>
+          <div id="reportSections" class="report-grid"></div>
+        </section>
+      </div>
 
       <section class="panel full" aria-label="Message tools">
         <h2>Message Tools</h2>
@@ -776,10 +850,11 @@
       summaryMeta: document.getElementById("summaryMeta"),
       warningList: document.getElementById("warningList"),
       summarySection: document.getElementById("summarySection"),
+      dashboardSection: document.getElementById("dashboardSection"),
+      chartsSection: document.getElementById("chartsSection"),
       reportsSection: document.getElementById("reportsSection"),
       activitiesSection: document.getElementById("activitiesSection"),
       reportSections: document.getElementById("reportSections"),
-      reportPanels: Array.from(document.querySelectorAll('[data-view="reports"]')),
       ratingsGrid: document.getElementById("ratingsGrid"),
       tideSummary: document.getElementById("tideSummary"),
       waveSummary: document.getElementById("waveSummary"),
@@ -1501,15 +1576,13 @@
     }
 
     function applyViewMode(mode) {
-      const safeMode = ["summary", "reports", "activities"].includes(mode) ? mode : "summary";
+      const safeMode = ["summary", "activities"].includes(mode) ? mode : "summary";
       state.viewMode = safeMode;
       el.viewSelect.value = safeMode;
 
       el.summarySection.hidden = safeMode !== "summary";
-      el.activitiesSection.hidden = safeMode !== "activities";
-      el.reportPanels.forEach((panel) => {
-        panel.hidden = safeMode !== "reports";
-      });
+      el.dashboardSection.hidden = false;
+      el.dashboardSection.classList.toggle("is-activities-page", safeMode === "activities");
     }
 
     function buildHourlyList(items, renderLine) {
@@ -1526,27 +1599,37 @@
     function renderReports(condition) {
       const bestLow = condition.tides.bestLow;
       const metrics = summarizeCoreMetrics(condition);
+      const isActivitiesPage = state.viewMode === "activities";
 
       const tideData = [
         `Best low tide: ${bestLow ? `${formatTime(bestLow.time)} at ${formatNumber(bestLow.heightFt)} ft` : "n/a"}`,
         `Lowest tide favors tide pooling when conditions are calm.`,
-        `Tide station: ${condition.tides.stationId}${condition.tides.stationFallbackUsed ? " (fallback)" : ""}`
+        `Tide station: ${condition.tides.stationId}${condition.tides.stationFallbackUsed ? " (fallback)" : ""}`,
+        `Low-tide access window: ${tideWindowAround(bestLow ? bestLow.time : null)}`
       ];
-      const tideSuggestion = `Suggestion: Prioritize the low-tide window around ${bestLow ? formatTime(bestLow.time) : "the best available low"}; lower tides are better for tide pooling access.`;
+      const tideSuggestion = isActivitiesPage
+        ? `Suggestion: Tide pooling should focus on the low-tide window around ${bestLow ? formatTime(bestLow.time) : "the best available low"}. Lower tides are better, and calmer surf or wind improves the experience.`
+        : `Suggestion: Prioritize the low-tide window around ${bestLow ? formatTime(bestLow.time) : "the best available low"}; lower tides are better for tide pooling access.`;
 
       const weatherData = [
         `Air temp: ${formatNumber(metrics.minTemp, 0)} to ${formatNumber(metrics.maxTemp, 0)} F`,
         `Wind avg: ${formatNumber(metrics.avgWind, 0)} mph`,
-        `Rain chance max: ${formatNumber(metrics.maxRainChance, 0)}%`
+        `Rain chance max: ${formatNumber(metrics.maxRainChance, 0)}%`,
+        `Max gusts: ${formatNumber(metrics.maxGust, 0)} mph`
       ];
-      const weatherSuggestion = `Suggestion: Use earlier daylight hours when wind is lighter and rain chance is lower.`;
+      const weatherSuggestion = isActivitiesPage
+        ? `Suggestion: Weather is most useful for narrowing your timing. Earlier daylight windows are usually better when wind or gusts build later in the day.`
+        : `Suggestion: Use earlier daylight hours when wind is lighter and rain chance is lower.`;
 
       const marineData = [
         `Wave avg: ${formatNumber(metrics.avgWave)} ft`,
         `Swell avg: ${formatNumber(average(condition.marine.hourly.map((x) => x.swellFt)))} ft`,
-        `Sea temp avg: ${formatNumber(average(condition.marine.hourly.map((x) => x.seaTempF)), 1)} F`
+        `Sea temp avg: ${formatNumber(average(condition.marine.hourly.map((x) => x.seaTempF)), 1)} F`,
+        `Avg swell period: ${formatNumber(average(condition.marine.hourly.map((x) => x.swellPeriodSec)), 0)} s`
       ];
-      const marineSuggestion = `Suggestion: Favor smaller wave/swell windows for snorkel, dive, and kid-focused activities.`;
+      const marineSuggestion = isActivitiesPage
+        ? `Suggestion: Marine conditions should drive activity selection. Smaller surf and swell are better for snorkeling, diving, tide pools, and beginner outings, while moderate surf supports surf-focused plans.`
+        : `Suggestion: Favor smaller wave/swell windows for snorkel, dive, and kid-focused activities.`;
 
       const cards = [
         {
