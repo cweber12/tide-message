@@ -292,7 +292,6 @@
 
     .rating-card {
       border: 0;
-      border-bottom: 1px solid var(--line);
       border-radius: 0;
       background: transparent;
       padding: 0 0 14px;
@@ -341,11 +340,9 @@
       border-radius: 0;
       background: transparent;
       padding: 0 0 14px;
-      border-bottom: 1px solid var(--line);
     }
 
     .chart-card:last-child {
-      border-bottom: 0;
       padding-bottom: 0;
     }
 
@@ -376,7 +373,6 @@
 
     .report-card {
       border: 0;
-      border-bottom: 1px solid var(--line);
       border-radius: 0;
       background: transparent;
       padding: 0 0 14px;
@@ -633,6 +629,17 @@
   </style>
 </head>
 <body>
+  <aside id="activitiesSection" class="panel dashboard-panel sidebar-panel" aria-label="Activity ratings">
+    <h2>Activity Guidance</h2>
+    <p class="small-note">Always check official San Diego County Beach and Bay water-quality status before entering the water. This page summarizes forecast conditions but does not replace beach closures, posted signs, lifeguards, or official advisories.</p>
+    <div id="ratingsGrid" class="ratings-grid"></div>
+  </aside>
+
+  <aside id="reportsSection" class="panel dashboard-panel sidebar-panel" aria-label="Reports">
+    <h2>Reports</h2>
+    <div id="reportSections" class="report-grid"></div>
+  </aside>
+
   <div class="shell">
     <header>
       <p class="eyebrow">Family planning portal</p>
@@ -682,12 +689,6 @@
       </section>
 
       <div id="dashboardSection" class="full dashboard-grid">
-        <section id="activitiesSection" class="panel dashboard-panel sidebar-panel" aria-label="Activity ratings">
-          <h2>Activity Guidance</h2>
-          <p class="small-note">Always check official San Diego County Beach and Bay water-quality status before entering the water. This page summarizes forecast conditions but does not replace beach closures, posted signs, lifeguards, or official advisories.</p>
-          <div id="ratingsGrid" class="ratings-grid"></div>
-        </section>
-
         <section id="chartsSection" class="panel dashboard-panel chart-panel" aria-label="Charts">
           <h2>Condition Charts</h2>
           <div class="chart-grid">
@@ -719,10 +720,6 @@
           </div>
         </section>
 
-        <section id="reportsSection" class="panel dashboard-panel sidebar-panel" aria-label="Reports">
-          <h2>Reports</h2>
-          <div id="reportSections" class="report-grid"></div>
-        </section>
       </div>
 
       <section class="panel full" aria-label="Message tools">
