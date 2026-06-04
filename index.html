@@ -118,10 +118,10 @@
     }
 
     .panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-md);
-      background: var(--surface);
-      box-shadow: var(--shadow-sm);
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
       padding: var(--space-4);
     }
 
@@ -240,7 +240,7 @@
     #map {
       width: 100%;
       height: 340px;
-      border-radius: var(--radius-sm);
+      border-radius: 0;
       border: 1px solid var(--line);
       overflow: hidden;
     }
@@ -277,6 +277,9 @@
     .sidebar-panel {
       background: transparent;
       box-shadow: none;
+      border-radius: 0;
+      border: 0;
+      padding: 20px 18px 24px;
     }
 
     .sidebar-panel h2 {
@@ -334,10 +337,16 @@
     }
 
     .chart-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
-      padding: 12px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0 0 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chart-card:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
     }
 
     .chart-card h3 {
@@ -392,7 +401,7 @@
 
     .hourly-toggle {
       margin-top: 8px;
-      border-radius: var(--radius-sm);
+      border-radius: 0;
       background: var(--surface-alt);
       border: 1px solid var(--line);
       padding: 8px 10px;
@@ -422,8 +431,8 @@
     }
 
     .dashboard-grid.is-activities-page .sidebar-panel {
-      background: var(--surface);
-      box-shadow: var(--shadow-sm);
+      background: transparent;
+      box-shadow: none;
     }
 
     .dashboard-grid.is-activities-page .report-card,
@@ -546,8 +555,70 @@
     }
 
     @media (min-width: 1024px) {
+      :root {
+        --sidebar-width: 292px;
+      }
+
+      body {
+        overflow-x: hidden;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: none;
+        padding: 24px calc(var(--sidebar-width) + 28px) 42px;
+      }
+
+      header,
+      #summarySection,
+      #chartsSection,
+      .panel[aria-label="Controls"],
+      .panel[aria-label="Map"],
+      .panel[aria-label="Message tools"],
+      footer.panel {
+        max-width: none;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-grid {
+        display: block;
+      }
+
+      #activitiesSection,
+      #reportsSection {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        width: var(--sidebar-width);
+        overflow-y: auto;
+        background: rgba(242, 245, 248, 0.96);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+
+      #activitiesSection {
+        left: 0;
+        border-right: 1px solid var(--line);
+      }
+
+      #reportsSection {
+        right: 0;
+        border-left: 1px solid var(--line);
+      }
+
+      #chartsSection {
+        margin: 0;
+      }
+
       .dashboard-grid.is-activities-page .chart-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dashboard-grid.is-activities-page #chartsSection {
+        margin-bottom: 0;
       }
     }
 
