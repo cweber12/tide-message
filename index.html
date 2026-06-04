@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>San Diego Tidepool Weekly Message</title>
+  <style>
+    :root {
+      --bg: #f5fbff;
+      --card: #ffffff;
+      --ink: #17324d;
+      --muted: #5f7185;
+      --accent: #006c9f;
+      --accent-2: #e9f7ff;
+      --border: #cfe3ef;
+      --good: #176b43;
+      --warn: #9a5b00;
+      --bad: #9b2c2c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, var(--bg), #fff 70%);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    header, main, footer {
+      width: min(980px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+    header { padding: 32px 0 16px; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 5vw, 3rem); line-height: 1.05; }
+    p { margin: 0 0 12px; }
+    .muted { color: var(--muted); }
+    .panel, .card, textarea {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(23, 50, 77, 0.06);
+    }
+    .panel { padding: 18px; margin: 18px 0; }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    label { display: grid; gap: 6px; font-weight: 650; }
+    input, button, textarea {
+      font: inherit;
+    }
+    input {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      background: var(--accent);
+      color: white;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: var(--accent-2);
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+    button:disabled { opacity: .65; cursor: wait; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+    .card { padding: 16px; }
+    .card h2 { margin: 0 0 10px; font-size: 1.2rem; }
+    .pill {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--accent-2);
+      color: var(--accent);
+      font-size: .85rem;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    ol { padding-left: 20px; margin: 10px 0 0; }
+    li { margin: 8px 0; }
+    .excellent, .great, .good { color: var(--good); font-weight: 750; }
+    .okay, .night { color: var(--warn); font-weight: 750; }
+    .marginal { color: var(--bad); font-weight: 750; }
+    textarea {
+      width: 100%;
+      min-height: 240px;
+      padding: 14px;
+      resize: vertical;
+      color: var(--ink);
+    }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; }
+    .status { min-height: 24px; color: var(--muted); }
+    footer { padding: 22px 0 40px; color: var(--muted); font-size: .92rem; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Weekly tidepool message</h1>
+    <p class="muted">NOAA tide predictions for San Diego, La Jolla, and Mission Bay. Pick the lowest family-friendly tide windows, then copy the group-chat message.</p>
+  </header>
+
+  <main>
+    <section class="panel" aria-label="Controls">
+      <div class="controls">
+        <label>
+          Start date
+          <input id="startDate" type="date" />
+        </label>
+        <label>
+          Days to check
+          <input id="days" type="number" min="1" max="30" value="7" />
+        </label>
+        <label>
+          “Good” low tide cutoff, ft
+          <input id="cutoff" type="number" step="0.1" value="1.0" />
+        </label>
+        <label>
+          Earliest family time
+          <input id="dayStart" type="time" value="06:30" />
+        </label>
+        <label>
+          Latest family time
+          <input id="dayEnd" type="time" value="18:30" />
+        </label>
+        <button id="refresh">Refresh NOAA tides</button>
+      </div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="panel" aria-label="Generated message">
+      <h2>Copy-ready group-chat message</h2>
+      <textarea id="message" spellcheck="true" aria-label="Generated weekly message"></textarea>
+      <div class="actions">
+        <button id="copy">Copy message</button>
+        <button id="selectAll" class="secondary">Select text</button>
+      </div>
+    </section>
+
+    <section id="cards" class="grid" aria-label="Station recommendations"></section>
+  </main>
+
+  <footer>
+    <p>Data source: NOAA CO-OPS Data API, product <code>predictions</code>, interval <code>hilo</code>, datum <code>MLLW</code>, English units, local daylight/standard time. Tide predictions are not surf, swell, lightning, water-quality, or access/safety forecasts.</p>
+  </footer>
+
+  <script>
+    const STATIONS = [
+      { name: "San Diego", id: "9410170" },
+      { name: "La Jolla", id: "9410230" },
+      { name: "Mission Bay", id: "9410196" }
+    ];
+
+    const NOAA_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
+    const TZ = "America/Los_Angeles";
+
+    const $ = (id) => document.getElementById(id);
+    const statusEl = $("status");
+    const cardsEl = $("cards");
+    const messageEl = $("message");
+    const refreshBtn = $("refresh");
+
+    function pad2(n) { return String(n).padStart(2, "0"); }
+
+    function dateInputValue(date = new Date()) {
+      // Use the San Diego/Los Angeles date even if someone opens the page elsewhere.
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(date).reduce((acc, p) => (acc[p.type] = p.value, acc), {});
+      return `${parts.year}-${parts.month}-${parts.day}`;
+    }
+
+    function ymdFromDateInput(value, addDays = 0) {
+      const [y, m, d] = value.split("-").map(Number);
+      const date = new Date(y, m - 1, d + addDays);
+      return `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}`;
+    }
+
+    function parseNoaaLocalTime(t) {
+      // NOAA returns local station time like "2026-06-03 05:35" for lst_ldt.
+      const [datePart, timePart] = t.split(" ");
+      const [y, m, d] = datePart.split("-").map(Number);
+      const [hh, mm] = timePart.split(":").map(Number);
+      return new Date(y, m - 1, d, hh, mm);
+    }
+
+    function formatDay(date) {
+      return new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+      }).format(date);
+    }
+
+    function formatTime(date) {
+      return new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function minutesFromTimeInput(value) {
+      const [hh, mm] = value.split(":").map(Number);
+      return hh * 60 + mm;
+    }
+
+    function minutesOfDay(date) {
+      return date.getHours() * 60 + date.getMinutes();
+    }
+
+    function tideWindow(date) {
+      const start = new Date(date.getTime() - 90 * 60 * 1000);
+      const end = new Date(date.getTime() + 60 * 60 * 1000);
+      return `${formatTime(start)}–${formatTime(end)}`;
+    }
+
+    function classify(tide, cutoff, dayStart, dayEnd) {
+      const mins = minutesOfDay(tide.date);
+      const isFamilyTime = mins >= dayStart && mins <= dayEnd;
+      if (!isFamilyTime) return { label: "Outside family daylight window", css: "night" };
+      if (tide.height <= -0.5) return { label: "Excellent", css: "excellent" };
+      if (tide.height <= 0) return { label: "Great", css: "great" };
+      if (tide.height <= cutoff) return { label: "Good", css: "good" };
+      return { label: "Marginal", css: "marginal" };
+    }
+
+    async function fetchTides(station, beginYmd, endYmd) {
+      const params = new URLSearchParams({
+        begin_date: beginYmd,
+        end_date: endYmd,
+        station: station.id,
+        product: "predictions",
+        datum: "MLLW",
+        time_zone: "lst_ldt",
+        units: "english",
+        interval: "hilo",
+        format: "json",
+        application: "homeschool_tidepool_page"
+      });
+
+      const res = await fetch(`${NOAA_URL}?${params}`);
+      if (!res.ok) throw new Error(`${station.name}: NOAA request failed (${res.status})`);
+      const json = await res.json();
+      if (json.error) throw new Error(`${station.name}: ${json.error.message || "NOAA returned an error"}`);
+      if (!json.predictions || !Array.isArray(json.predictions)) throw new Error(`${station.name}: no prediction data returned`);
+
+      return json.predictions
+        .filter((p) => p.type === "L")
+        .map((p) => ({
+          station,
+          rawTime: p.t,
+          date: parseNoaaLocalTime(p.t),
+          height: Number(p.v),
+          type: p.type
+        }));
+    }
+
+    function chooseRecommendations(lows, cutoff, dayStart, dayEnd) {
+      const enriched = lows.map((t) => ({ ...t, quality: classify(t, cutoff, dayStart, dayEnd) }));
+      const familyGood = enriched
+        .filter((t) => t.quality.css !== "night" && t.height <= cutoff)
+        .sort((a, b) => a.height - b.height || a.date - b.date)
+        .slice(0, 3);
+
+      if (familyGood.length) return familyGood;
+
+      return enriched
+        .sort((a, b) => a.height - b.height || a.date - b.date)
+        .slice(0, 3);
+    }
+
+    function stationCard(station, recs, cutoff, dayStart, dayEnd) {
+      const htmlItems = recs.map((t) => {
+        const q = classify(t, cutoff, dayStart, dayEnd);
+        return `<li><strong>${formatDay(t.date)} at ${formatTime(t.date)}</strong>: ${t.height.toFixed(1)} ft, window ${tideWindow(t.date)} <span class="${q.css}">${q.label}</span></li>`;
+      }).join("");
+
+      return `<article class="card">
+        <h2>${station.name} <span class="pill">${station.id}</span></h2>
+        <ol>${htmlItems}</ol>
+      </article>`;
+    }
+
+    function buildMessage(results, startValue, days, cutoff, dayStart, dayEnd) {
+      const startNice = formatDay(parseNoaaLocalTime(`${startValue} 12:00`));
+      const intro = `🌊 Tidepool windows for the next ${days} days, starting ${startNice}\nNOAA tide predictions. Best viewing is usually around low tide, especially when the tide is near 0 ft or negative. Plan for about 90 minutes before low tide to 60 minutes after.\n`;
+
+      const lines = results.map(({ station, recs }) => {
+        if (!recs.length) return `\n${station.name}: No low-tide recommendations found.`;
+        const best = recs[0];
+        const q = classify(best, cutoff, dayStart, dayEnd);
+        const alternates = recs.slice(1).map((t) => `${formatDay(t.date)} ${formatTime(t.date)} (${t.height.toFixed(1)} ft)`).join("; ");
+        return `\n${station.name}: Best pick is ${formatDay(best.date)} at ${formatTime(best.date)} (${best.height.toFixed(1)} ft, ${q.label.toLowerCase()}). Good arrival window: ${tideWindow(best.date)}.${alternates ? ` Backup options: ${alternates}.` : ""}`;
+      }).join("\n");
+
+      const safety = `\n\nPlease check surf/waves, weather, closures, water quality, and slippery rocks before heading out. Bring shoes with grip, layers, snacks/water, and remind kids to look gently and leave animals attached where they are.`;
+      return intro + lines + safety;
+    }
+
+    async function refresh() {
+      const startValue = $("startDate").value;
+      const days = Math.max(1, Math.min(30, Number($("days").value || 7)));
+      const cutoff = Number($("cutoff").value || 1.0);
+      const dayStart = minutesFromTimeInput($("dayStart").value);
+      const dayEnd = minutesFromTimeInput($("dayEnd").value);
+      const beginYmd = ymdFromDateInput(startValue, 0);
+      const endYmd = ymdFromDateInput(startValue, days);
+
+      refreshBtn.disabled = true;
+      statusEl.textContent = "Fetching NOAA tide predictions…";
+      cardsEl.innerHTML = "";
+      messageEl.value = "";
+
+      try {
+        const all = await Promise.all(STATIONS.map(async (station) => {
+          const lows = await fetchTides(station, beginYmd, endYmd);
+          const recs = chooseRecommendations(lows, cutoff, dayStart, dayEnd);
+          return { station, lows, recs };
+        }));
+
+        cardsEl.innerHTML = all.map((r) => stationCard(r.station, r.recs, cutoff, dayStart, dayEnd)).join("");
+        messageEl.value = buildMessage(all, startValue, days, cutoff, dayStart, dayEnd);
+        statusEl.textContent = `Updated ${new Date().toLocaleString()}.`;
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = err.message;
+        messageEl.value = "Could not fetch tide data. Try refreshing, or open the browser console for details.";
+      } finally {
+        refreshBtn.disabled = false;
+      }
+    }
+
+    $("refresh").addEventListener("click", refresh);
+    $("copy").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(messageEl.value);
+      statusEl.textContent = "Copied message to clipboard.";
+    });
+    $("selectAll").addEventListener("click", () => {
+      messageEl.focus();
+      messageEl.select();
+    });
+
+    $("startDate").value = dateInputValue();
+    refresh();
+  </script>
+</body>
+</html>
