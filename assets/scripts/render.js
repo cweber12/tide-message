@@ -55,10 +55,12 @@ function setStatus(message) {
       `).join("");
 
       const isOverview = state.currentView === "overview";
-      if (isOverview) {
-        el.overviewNavLink.setAttribute("aria-current", "page");
-      } else {
-        el.overviewNavLink.removeAttribute("aria-current");
+      if (el.overviewNavLink) {
+        if (isOverview) {
+          el.overviewNavLink.setAttribute("aria-current", "page");
+        } else {
+          el.overviewNavLink.removeAttribute("aria-current");
+        }
       }
 
       el.activityNavLinks.querySelectorAll("[data-activity-link]").forEach((link) => {
@@ -141,6 +143,55 @@ function setStatus(message) {
           <p class="metric-note">${rating.reason}</p>
         </article>
       `).join("");
+
+      const label = el.summaryStripToggle.querySelector(".summary-strip-toggle-label");
+      if (label) {
+        label.textContent = state.currentView === "activity" && state.selectedActivity
+          ? `${state.selectedActivity.navLabel} rating`
+          : `Activity ratings (${cards.length})`;
+      }
+    }
+
+    function setSummaryStripOpen(open) {
+      el.summaryStripWrap.setAttribute("data-open", String(open));
+      el.summaryStripToggle.setAttribute("aria-expanded", String(open));
+      el.activitySummaryStrip.setAttribute("aria-hidden", String(!open));
+    }
+
+    function contextImageQuery(condition) {
+      const location = getLocationById(state.selectedLocationId);
+      const place = condition.place;
+      const subject = (place && place.id !== "custom" && place.name)
+        || (location && location.label)
+        || (place && place.zone)
+        || "San Diego";
+      return `${subject} San Diego California ocean coast`;
+    }
+
+    async function updateContextBackground(condition) {
+      const query = contextImageQuery(condition);
+      el.contextMedia.classList.add("is-loading");
+      const image = await fetchBackgroundImage(query);
+
+      // Guard against a stale response landing after the user switched places.
+      if (!state.condition || contextImageQuery(state.condition) !== query) return;
+
+      el.contextMedia.classList.remove("is-loading");
+      if (image && image.url) {
+        el.contextMedia.style.backgroundImage = `url("${image.url}")`;
+        el.contextMedia.classList.add("has-image");
+        const credit = [image.creator && `Photo: ${image.creator}`, image.license, "Openverse"]
+          .filter(Boolean)
+          .join(" · ");
+        el.contextCredit.textContent = credit;
+        if (image.source) {
+          el.contextCredit.title = image.title || credit;
+        }
+      } else {
+        el.contextMedia.style.backgroundImage = "";
+        el.contextMedia.classList.remove("has-image");
+        el.contextCredit.textContent = "";
+      }
     }
 
     function buildHourlyList(items, renderLine) {
@@ -621,6 +672,7 @@ function setStatus(message) {
       destroyAllCharts();
       renderContextHeader(condition);
       renderActivitySummaryStrip(condition);
+      updateContextBackground(condition);
       if (state.currentView === "activity") {
         renderActivityView(condition);
       } else {

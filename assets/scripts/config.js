@@ -2,6 +2,7 @@
 const NOAA_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
     const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
     const MARINE_URL = "https://marine-api.open-meteo.com/v1/marine";
+    const OPENVERSE_URL = "https://api.openverse.org/v1/images/";
     const TZ = "America/Los_Angeles";
 
     const TIDE_STATIONS = {

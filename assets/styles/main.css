@@ -40,6 +40,7 @@
       --bad: var(--color-status-error);
       --shadow: none;
       --header-height: 104px;
+      --header-gap: 22px;
       --sidebar-width: 248px;
     }
 
@@ -168,7 +169,7 @@
     .workspace {
       display: grid;
       gap: 0;
-      margin-top: var(--header-height);
+      margin-top: calc(var(--header-height) + var(--header-gap));
     }
 
     .left-rail,
@@ -177,15 +178,15 @@
     }
 
     .left-rail {
-      padding: 24px 16px;
+      padding: 16px;
       display: grid;
       gap: 14px;
       align-content: start;
       position: fixed;
       left: 0;
-      top: var(--header-height);
+      top: calc(var(--header-height) + var(--header-gap));
       width: var(--sidebar-width);
-      height: calc(100vh - var(--header-height));
+      height: calc(100vh - (var(--header-height) + var(--header-gap)));
       overflow-y: auto;
       border-right: 1px solid var(--line);
       border-bottom: 0;
@@ -362,8 +363,165 @@
     }
 
     .context-panel {
-      display: grid;
-      gap: 18px;
+      padding: 0;
+      display: block;
+    }
+
+    /* Full-bleed location photograph behind the planning context. */
+    .context-media {
+      position: relative;
+      min-height: clamp(300px, 42vh, 460px);
+      padding: 18px 18px 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      isolation: isolate;
+      background-color: #06303f;
+      background-image:
+        radial-gradient(120% 120% at 80% 0%, rgba(11, 95, 138, 0.55), transparent 60%),
+        linear-gradient(160deg, #0a4a68 0%, #06303f 60%, #02151d 100%);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 320ms ease;
+    }
+
+    .context-media.has-image {
+      background-color: #02151d;
+    }
+
+    /* Legibility scrim: darkest at top where the title sits, clearing toward
+       the middle so the photograph stays visible behind the slide-up strip. */
+    .context-scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        linear-gradient(180deg, rgba(2, 21, 29, 0.74) 0%, rgba(2, 21, 29, 0.32) 34%, rgba(2, 21, 29, 0.05) 58%, rgba(2, 21, 29, 0) 78%);
+      pointer-events: none;
+    }
+
+    .context-header {
+      position: relative;
+      z-index: 1;
+      max-width: 64ch;
+    }
+
+    .context-media .eyebrow {
+      color: #aee2ff;
+    }
+
+    .context-media #viewTitle {
+      color: #f4f9fe;
+      margin-top: 6px;
+      text-shadow: 0 1px 14px rgba(2, 21, 29, 0.5);
+    }
+
+    .context-media .subtitle-small {
+      color: rgba(238, 247, 253, 0.92);
+    }
+
+    .context-credit {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      z-index: 1;
+      margin: 0;
+      max-width: 50%;
+      text-align: right;
+      font-family: "IBM Plex Mono", "Consolas", monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.02em;
+      color: rgba(238, 247, 253, 0.78);
+      text-shadow: 0 1px 8px rgba(2, 21, 29, 0.7);
+      pointer-events: none;
+    }
+
+    .context-credit:empty {
+      display: none;
+    }
+
+    /* Slide-up activity strip: anchored to the bottom edge of the image,
+       full width, square corners, frosted medium-opacity white. */
+    .summary-strip {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      border-radius: 0;
+    }
+
+    .summary-strip-toggle {
+      width: 100%;
+      min-height: 44px;
+      border: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 0;
+      padding: 11px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-family: "IBM Plex Mono", "Consolas", monospace;
+      font-size: 0.74rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #0a3a52;
+      background: rgba(255, 255, 255, 0.62);
+      -webkit-backdrop-filter: blur(10px) saturate(1.1);
+      backdrop-filter: blur(10px) saturate(1.1);
+      transition: background-color 200ms ease;
+    }
+
+    .summary-strip-toggle:hover,
+    .summary-strip-toggle:focus-visible {
+      background: rgba(255, 255, 255, 0.78);
+      transform: none;
+      outline: none;
+    }
+
+    .summary-strip-toggle-icon {
+      width: 12px;
+      height: 12px;
+      flex: 0 0 auto;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(-135deg); /* points up: "expand" */
+      transition: transform 320ms ease;
+    }
+
+    .summary-strip[data-open="true"] .summary-strip-toggle-icon {
+      transform: rotate(45deg); /* points down: "collapse" */
+    }
+
+    .summary-strip-body {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      padding: 0 18px;
+      background: rgba(255, 255, 255, 0.62);
+      -webkit-backdrop-filter: blur(10px) saturate(1.1);
+      backdrop-filter: blur(10px) saturate(1.1);
+      transition: max-height 360ms ease, opacity 240ms ease, padding 360ms ease;
+    }
+
+    .summary-strip[data-open="true"] .summary-strip-body {
+      max-height: min(56vh, 320px);
+      overflow-y: auto;
+      opacity: 1;
+      padding: 16px 18px;
+    }
+
+    .summary-strip-body .metric-label {
+      color: #2c5066;
+    }
+
+    .summary-strip-body .metric-card {
+      border-bottom-color: rgba(10, 58, 82, 0.18);
     }
 
     .metric-grid,
@@ -423,7 +581,7 @@
     }
 
     .module-card {
-      padding: 10px 0 16px;
+      padding: 18px 24px;
       display: grid;
       gap: 14px;
       border-bottom: 1px solid var(--line);
@@ -572,6 +730,7 @@
     @media (min-width: 720px) {
       :root {
         --header-height: 88px;
+        --header-gap: 18px;
       }
 
       .hero {
@@ -589,6 +748,7 @@
     @media (min-width: 1024px) {
       :root {
         --header-height: 82px;
+        --header-gap: 20px;
       }
 
       .filter-grid {
@@ -618,6 +778,7 @@
     @media (max-width: 899px) {
       :root {
         --header-height: 134px;
+        --header-gap: 16px;
       }
 
       .hero-heading {

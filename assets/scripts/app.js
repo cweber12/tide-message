@@ -30,7 +30,11 @@ const el = {
       viewEyebrow: document.getElementById("viewEyebrow"),
       viewTitle: document.getElementById("viewTitle"),
       viewDescription: document.getElementById("viewDescription"),
+      contextMedia: document.getElementById("contextMedia"),
+      contextCredit: document.getElementById("contextCredit"),
       activitySummaryStrip: document.getElementById("activitySummaryStrip"),
+      summaryStripWrap: document.getElementById("summaryStripWrap"),
+      summaryStripToggle: document.getElementById("summaryStripToggle"),
       summaryLead: document.getElementById("summaryLead"),
       summaryMeta: document.getElementById("summaryMeta"),
       warningList: document.getElementById("warningList"),
@@ -135,6 +139,12 @@ async function copyText(text) {
       });
       el.updateBtn.addEventListener("click", updateConditions);
       el.copyActivityMessage.addEventListener("click", () => copyText(el.activityMessage.value));
+
+      el.summaryStripToggle.addEventListener("click", () => {
+        const isOpen = el.summaryStripWrap.getAttribute("data-open") === "true";
+        setSummaryStripOpen(!isOpen);
+      });
+
       window.addEventListener("hashchange", syncRouteFromHash);
     }
 

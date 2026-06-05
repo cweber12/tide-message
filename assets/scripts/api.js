@@ -1,10 +1,23 @@
 // External API fetchers and forecast availability loaders.
 async function fetchJson(url) {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      const timeoutMs = 12000;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        if (error && error.name === "AbortError") {
+          throw new Error(`Request timeout after ${timeoutMs / 1000}s`);
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeoutId);
       }
-      return response.json();
     }
 
     async function fetchTideSeries(stationId, beginNoDash, endNoDash) {
@@ -193,6 +206,48 @@ async function fetchJson(url) {
         addWarning(condition, `Marine forecast request failed: ${error.message}`);
         return { hourly: [] };
       }
+    }
+
+    // Open-license location photography for the context panel background.
+    // Openverse needs no API key and serves CORS-enabled JSON; results are
+    // cached per query so switching places does not re-hit the network.
+    const backgroundImageCache = new Map();
+
+    async function fetchBackgroundImage(query) {
+      if (backgroundImageCache.has(query)) {
+        return backgroundImageCache.get(query);
+      }
+
+      const params = new URLSearchParams({
+        q: query,
+        aspect_ratio: "wide",
+        size: "large",
+        mature: "false",
+        page_size: "12"
+      });
+
+      let image = null;
+      try {
+        const data = await fetchJson(`${OPENVERSE_URL}?${params.toString()}`);
+        const results = Array.isArray(data.results) ? data.results : [];
+        const pick = results.find((row) => row && (row.thumbnail || row.url));
+        if (pick) {
+          image = {
+            // Prefer Openverse's proxied thumbnail: it always loads
+            // cross-origin, whereas some source `url`s block hotlinking.
+            url: pick.thumbnail || pick.url,
+            title: pick.title || "",
+            creator: pick.creator || "",
+            source: pick.foreign_landing_url || pick.url,
+            license: [pick.license, pick.license_version].filter(Boolean).join(" ").toUpperCase()
+          };
+        }
+      } catch (error) {
+        image = null;
+      }
+
+      backgroundImageCache.set(query, image);
+      return image;
     }
 
     async function fetchWaterQualityStatus() {

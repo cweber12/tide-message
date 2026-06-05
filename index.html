@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="./assets/styles/main.css" />
+  <link rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css?v=1.9.4" />
+  <link rel="stylesheet" href="./assets/styles/main.css?v=20260604c" />
 </head>
 <body>
   <div class="page-shell">
@@ -49,12 +49,23 @@
 
       <main class="main-column">
         <section class="panel context-panel" aria-label="Current planning context">
-          <div>
-            <p id="viewEyebrow" class="eyebrow">Overview</p>
-            <h2 id="viewTitle">Loading latest conditions...</h2>
-            <p id="viewDescription" class="subtitle-small">Forecast and activity guidance will appear after the first update finishes.</p>
+          <div id="contextMedia" class="context-media">
+            <div class="context-scrim" aria-hidden="true"></div>
+            <div class="context-header">
+              <p id="viewEyebrow" class="eyebrow">Overview</p>
+              <h2 id="viewTitle">Loading latest conditions...</h2>
+              <p id="viewDescription" class="subtitle-small">Forecast and activity guidance will appear after the first update finishes.</p>
+            </div>
+            <p id="contextCredit" class="context-credit"></p>
+
+            <div id="summaryStripWrap" class="summary-strip" data-open="false">
+              <div id="activitySummaryStrip" class="summary-strip-body metric-grid" aria-hidden="true"></div>
+              <button id="summaryStripToggle" type="button" class="summary-strip-toggle" aria-expanded="false" aria-controls="activitySummaryStrip">
+                <span class="summary-strip-toggle-label">Activity ratings</span>
+                <span class="summary-strip-toggle-icon" aria-hidden="true"></span>
+              </button>
+            </div>
           </div>
-          <div id="activitySummaryStrip" class="metric-grid"></div>
         </section>
 
         <section id="summarySection" class="panel" aria-label="Daily summary">
@@ -109,15 +120,15 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="./assets/scripts/config.js"></script>
-  <script src="./assets/scripts/utils.js"></script>
-  <script src="./assets/scripts/api.js"></script>
-  <script src="./assets/scripts/scoring.js"></script>
-  <script src="./assets/scripts/render.js"></script>
-  <script src="./assets/scripts/map.js"></script>
-  <script src="./assets/scripts/app.js"></script>
-  <script src="./assets/scripts/bootstrap.js"></script>
+  <script src="./assets/vendor/leaflet/leaflet.js?v=1.9.4"></script>
+  <script src="./assets/vendor/chartjs/chart.umd.js?v=4.4.3"></script>
+  <script src="./assets/scripts/config.js?v=20260604b"></script>
+  <script src="./assets/scripts/utils.js?v=20260604b"></script>
+  <script src="./assets/scripts/api.js?v=20260604b"></script>
+  <script src="./assets/scripts/scoring.js?v=20260604b"></script>
+  <script src="./assets/scripts/render.js?v=20260604b"></script>
+  <script src="./assets/scripts/map.js?v=20260604b"></script>
+  <script src="./assets/scripts/app.js?v=20260604b"></script>
+  <script src="./assets/scripts/bootstrap.js?v=20260604b"></script>
 </body>
 </html>
