@@ -5,8 +5,8 @@ function setStatus(message) {
 
     function labelScore(label) {
       const value = String(label || "").toLowerCase();
-      if (value.includes("good") || value.includes("great") || value.includes("ideal")) return 3;
-      if (value.includes("fair") || value.includes("possible") || value.includes("mixed") || value.includes("small surf")) return 2;
+      if (value.includes("good") || value.includes("great") || value.includes("ideal") || value.includes("calm")) return 3;
+      if (value.includes("fair") || value.includes("possible") || value.includes("mixed") || value.includes("small surf") || value.includes("usable") || value.includes("moderate")) return 2;
       return 1;
     }
 
@@ -63,6 +63,14 @@ function setStatus(message) {
         }
       }
 
+      if (el.marineLifeNavLink) {
+        if (state.currentView === "marine-life") {
+          el.marineLifeNavLink.setAttribute("aria-current", "page");
+        } else {
+          el.marineLifeNavLink.removeAttribute("aria-current");
+        }
+      }
+
       el.activityNavLinks.querySelectorAll("[data-activity-link]").forEach((link) => {
         const slug = link.getAttribute("data-activity-link");
         const active = state.currentView === "activity" && state.selectedActivity && state.selectedActivity.slug === slug;
@@ -88,74 +96,120 @@ function setStatus(message) {
       el.dateInput.value = state.selectedDate;
     }
 
-    function sortedActivityCards(condition) {
-      return ACTIVITIES.map((activity) => ({
-        activity,
-        rating: condition.ratings[activity.ratingKey]
-      })).sort((left, right) => labelScore(right.rating.label) - labelScore(left.rating.label));
+    function ratingClass(label) {
+      const score = labelScore(label);
+      return score === 3 ? "good" : score === 2 ? "maybe" : "bad";
     }
 
-    function renderSummary(condition) {
-      const topActivities = sortedActivityCards(condition).slice(0, 2).map((entry) => entry.activity.navLabel).join(" and ");
-      const bestLow = condition.tides.bestLow;
-      const bestLowText = bestLow
-        ? `Best low tide ${formatTime(bestLow.time)} at ${formatNumber(bestLow.heightFt)} ft.`
-        : "No clear low-tide window found for this date.";
-      const waveAvg = average(condition.marine.hourly.map((x) => x.waveFt));
-      const windAvg = average(condition.weather.hourly.map((x) => x.windMph));
-      const rainMax = maxValue(condition.weather.hourly.map((x) => x.rainChance));
-
-      el.summaryLead.textContent = `${condition.place.name} on ${formatDate(fromYmd(condition.date))} looks strongest for ${topActivities || "careful activity selection"}.`;
-      el.summaryMeta.textContent = `${bestLowText} Avg wave ${formatNumber(waveAvg)} ft, avg wind ${formatNumber(windAvg, 0)} mph, max rain chance ${formatNumber(rainMax, 0)}%. Water quality: ${condition.waterQuality.label}.`;
-
-      el.warningList.innerHTML = "";
-      const warnings = condition.warnings.length
-        ? condition.warnings
-        : ["No obvious forecast gaps reported. Still verify closures, signs, water quality, and live beach conditions before leaving."];
-      warnings.forEach((warning) => {
-        const li = document.createElement("li");
-        li.textContent = warning;
-        el.warningList.appendChild(li);
-      });
+    // Resolve a single overlay stat (label/value/note) by key for the active view.
+    function statByKey(condition, key) {
+      const metrics = summarizeCoreMetrics(condition);
+      const marineHourly = condition.marine.hourly;
+      switch (key) {
+        case "lowTide": {
+          const low = condition.tides.bestLow;
+          return low
+            ? { label: "Best low", value: formatTime(low.time), note: `${formatNumber(low.heightFt)} ft` }
+            : { label: "Best low", value: "n/a", note: "" };
+        }
+        case "wave":
+          return { label: "Avg wave", value: `${formatNumber(metrics.avgWave)} ft`, note: "" };
+        case "swell": {
+          const swell = average(marineHourly.map((row) => row.swellFt));
+          const period = average(marineHourly.map((row) => row.swellPeriodSec));
+          return { label: "Swell", value: `${formatNumber(swell)} ft`, note: `${formatNumber(period, 0)} s` };
+        }
+        case "wind":
+          return { label: "Avg wind", value: `${formatNumber(metrics.avgWind, 0)} mph`, note: `gust ${formatNumber(metrics.maxGust, 0)}` };
+        case "rain":
+          return { label: "Max rain", value: `${formatNumber(metrics.maxRainChance, 0)}%`, note: "" };
+        case "temp":
+          return { label: "Air temp", value: `${formatNumber(metrics.minTemp, 0)}-${formatNumber(metrics.maxTemp, 0)} F`, note: "" };
+        case "waterTemp": {
+          const seaTemps = marineHourly.map((row) => row.seaTempF).filter((value) => value != null);
+          return { label: "Water", value: `${formatNumber(average(seaTemps), 1)} F`, note: "" };
+        }
+        default:
+          return null;
+      }
     }
 
     function renderContextHeader(condition) {
       const location = getLocationById(state.selectedLocationId);
+      if (state.currentView === "marine-life") {
+        const place = (condition && condition.place) || state.selectedPlace;
+        el.viewEyebrow.textContent = "Marine Life";
+        el.viewTitle.textContent = `${place ? place.name : "San Diego"} · recent sightings`;
+        return;
+      }
       if (state.currentView === "overview" || !state.selectedActivity) {
         el.viewEyebrow.textContent = "Overview";
-        el.viewTitle.textContent = `${location ? location.label : condition.place.zone} overview for ${formatDate(fromYmd(condition.date))}`;
-        el.viewDescription.textContent = "Grouped tide, marine, wind, and weather modules with activity guidance ranked for quick scanning.";
+        el.viewTitle.textContent = `${location ? location.label : condition.place.zone} · ${formatDate(fromYmd(condition.date))}`;
       } else {
-        el.viewEyebrow.textContent = "Activity View";
-        el.viewTitle.textContent = `${state.selectedActivity.title} for ${condition.place.name}`;
-        el.viewDescription.textContent = state.selectedActivity.intro;
+        el.viewEyebrow.textContent = state.selectedActivity.navLabel;
+        el.viewTitle.textContent = `${state.selectedActivity.title} · ${condition.place.name}`;
       }
     }
 
-    function renderActivitySummaryStrip(condition) {
-      const cards = state.currentView === "activity" && state.selectedActivity
-        ? [{ activity: state.selectedActivity, rating: condition.ratings[state.selectedActivity.ratingKey] }]
-        : sortedActivityCards(condition);
-      el.activitySummaryStrip.innerHTML = cards.map(({ activity, rating }) => `
-        <article class="metric-card">
-          <p class="metric-label">${activity.navLabel}</p>
-          <p class="metric-value">${rating.label}</p>
-          <p class="metric-note">${rating.reason}</p>
-        </article>
+    function renderContextStats(condition) {
+      const keys = state.currentView === "activity" && state.selectedActivity
+        ? state.selectedActivity.statKeys
+        : OVERVIEW_STATS;
+      el.contextStats.innerHTML = keys
+        .map((key) => statByKey(condition, key))
+        .filter(Boolean)
+        .map((stat) => `
+          <div class="context-stat">
+            <span class="context-stat-label">${stat.label}</span>
+            <span class="context-stat-value">${stat.value}${stat.note ? ` <small>${stat.note}</small>` : ""}</span>
+          </div>
+        `).join("");
+    }
+
+    // Flatten an activity to its rating reads. Most activities have one read;
+    // Surf surfaces two (beginner + energy) from separate scorers.
+    function getActivityReads(condition, activity) {
+      if (activity.ratingReads) {
+        return activity.ratingReads.map((read) => ({
+          name: `${activity.navLabel} · ${read.label}`,
+          shortName: read.label,
+          slug: activity.slug,
+          rating: condition.ratings[read.key]
+        }));
+      }
+      return [{
+        name: activity.navLabel,
+        shortName: activity.navLabel,
+        slug: activity.slug,
+        rating: condition.ratings[activity.ratingKey]
+      }];
+    }
+
+    function renderRatingsBar(condition) {
+      const activities = state.currentView === "activity" && state.selectedActivity
+        ? [state.selectedActivity]
+        : ACTIVITIES;
+      const reads = activities.flatMap((activity) => getActivityReads(condition, activity));
+      el.activityRatings.innerHTML = reads.map((read) => `
+        <a class="rating-chip" href="#/activity/${read.slug}">
+          <span class="rating-chip-name">${read.name}</span>
+          <span class="rating-chip-value is-${ratingClass(read.rating.label)}" title="${read.rating.reason}">${read.rating.label}</span>
+        </a>
       `).join("");
-
-      const label = el.summaryStripToggle.querySelector(".summary-strip-toggle-label");
-      if (label) {
-        label.textContent = state.currentView === "activity" && state.selectedActivity
-          ? `${state.selectedActivity.navLabel} rating`
-          : `Activity ratings (${cards.length})`;
-      }
     }
 
-    function setSummaryStripOpen(open) {
-      el.summaryStripWrap.setAttribute("data-open", String(open));
-      el.summaryStripToggle.setAttribute("aria-expanded", String(open));
-      el.activitySummaryStrip.setAttribute("aria-hidden", String(!open));
+    function renderWarnings(condition) {
+      const warnings = (condition.warnings || []).filter(Boolean);
+      if (!warnings.length) {
+        el.warningBand.hidden = true;
+        el.warningBand.innerHTML = "";
+        return;
+      }
+      el.warningBand.hidden = false;
+      el.warningBand.innerHTML = `
+        <p class="warning-band-title">Check before you go</p>
+        <ul class="warning-band-list">${warnings.map((warning) => `<li>${warning}</li>`).join("")}</ul>
+      `;
     }
 
     function contextImageQuery(condition) {
@@ -169,6 +223,17 @@ function setStatus(message) {
     }
 
     async function updateContextBackground(condition) {
+      // Prefer a bundled local photo for the selected place; only fall back to
+      // the Openverse lookup when there is no local image for this place.
+      const localImage = condition.place && PLACE_IMAGES[condition.place.id];
+      if (localImage) {
+        el.contextMedia.classList.remove("is-loading");
+        el.contextMedia.style.backgroundImage = `url("${localImage}")`;
+        el.contextMedia.classList.add("has-image");
+        el.contextCredit.textContent = "";
+        return;
+      }
+
       const query = contextImageQuery(condition);
       el.contextMedia.classList.add("is-loading");
       const image = await fetchBackgroundImage(query);
@@ -541,39 +606,50 @@ function setStatus(message) {
       }
     }
 
-    function renderModuleCards(targetEl, modules, detailed = false) {
-      targetEl.innerHTML = modules.map((module) => {
-        const canvasId = `${targetEl.id}-${module.key}-chart`;
-        const chartMarkup = module.hasChartData
-          ? `<canvas id="${canvasId}" aria-label="${module.title} chart" role="img"></canvas>`
-          : `<div class="chart-empty">${module.emptyText}</div>`;
+    // One report card: header on top, verdict + stat pills, then chart below.
+    function reportCardHtml(targetId, module, featured) {
+      const canvasId = `${targetId}-${module.key}-chart`;
+      const chartMarkup = module.hasChartData
+        ? `<canvas id="${canvasId}" aria-label="${module.title} chart" role="img"></canvas>`
+        : `<div class="chart-empty">${module.emptyText}</div>`;
 
-        return `
-          <article class="panel module-card ${detailed ? "is-detailed" : "is-compact"}">
-            <div class="module-copy">
-              <p class="module-kicker">${module.kicker}</p>
-              <h3>${module.title}</h3>
-              <p class="module-recommendation">${module.recommendation}</p>
-              <div class="stat-pills">${module.pills.map((pill) => `<span class="stat-pill">${pill}</span>`).join("")}</div>
-              <ul class="detail-list">${module.details.map((line) => `<li>${line}</li>`).join("")}</ul>
-              ${module.availabilityNote ? `<p class="availability-note">${module.availabilityNote}</p>` : ""}
-              ${detailed ? module.hourlyHtml : ""}
-            </div>
-            <div class="chart-wrap">${chartMarkup}</div>
-          </article>
-        `;
-      }).join("");
+      return `
+        <article class="panel report-card ${featured ? "is-featured" : ""}">
+          <div class="report-head">
+            <p class="module-kicker">${module.kicker}</p>
+            <h3>${module.title}</h3>
+          </div>
+          <p class="module-recommendation">${module.recommendation}</p>
+          <div class="stat-pills">${module.pills.map((pill) => `<span class="stat-pill">${pill}</span>`).join("")}</div>
+          ${module.availabilityNote ? `<p class="availability-note">${module.availabilityNote}</p>` : ""}
+          ${featured ? module.hourlyHtml : ""}
+          <div class="chart-wrap">${chartMarkup}</div>
+        </article>
+      `;
+    }
 
-      modules.forEach((module) => {
+    // Render an optional full-width featured report above a 2-column grid.
+    function renderReports(targetEl, modules, featuredModule) {
+      const featuredHtml = featuredModule ? reportCardHtml(targetEl.id, featuredModule, true) : "";
+      const gridHtml = `<div class="report-grid">${modules.map((module) => reportCardHtml(targetEl.id, module, false)).join("")}</div>`;
+      targetEl.innerHTML = featuredHtml + gridHtml;
+
+      const all = featuredModule ? [featuredModule, ...modules] : modules;
+      all.forEach((module) => {
         if (!module.hasChartData) return;
-        mountChart(module.chartKey, `${targetEl.id}-${module.key}-chart`, state.condition, !detailed);
+        mountChart(module.chartKey, `${targetEl.id}-${module.key}-chart`, state.condition, module !== featuredModule);
       });
     }
 
     function parseRoute() {
       const hash = window.location.hash.replace(/^#\/?/, "");
       if (!hash) return { view: "overview", activity: null };
-      const match = hash.match(/^activity\/(.+)$/);
+      const [path, queryString] = hash.split("?");
+      if (path === "marine-life") {
+        const params = new URLSearchParams(queryString || "");
+        return { view: "marine-life", activity: null, species: params.get("species") };
+      }
+      const match = path.match(/^activity\/(.+)$/);
       if (!match) return { view: "overview", activity: null };
       const activity = getActivityBySlug(match[1]);
       return activity ? { view: "activity", activity } : { view: "overview", activity: null };
@@ -584,16 +660,23 @@ function setStatus(message) {
       state.selectedActivity = route.activity || null;
       el.overviewView.hidden = route.view !== "overview";
       el.activityView.hidden = route.view !== "activity";
+      el.marineLifeView.hidden = route.view !== "marine-life";
+      document.body.dataset.view = route.view;
       if (route.view === "activity") {
         el.overviewReports.innerHTML = "";
-      } else {
+      } else if (route.view === "overview") {
         el.activityReports.innerHTML = "";
         el.messageSection.hidden = true;
         el.activityMessage.value = "";
       }
       renderActivityNav();
-      if (state.condition) {
-        renderCurrentView(state.condition);
+      if (route.view === "marine-life") {
+        state.pendingSpecies = route.species || null;
+        if (state.condition) renderContextHeader(state.condition);
+        refreshMarineLife();
+      } else {
+        if (typeof closeSpeciesPanel === "function") closeSpeciesPanel({ updateUrl: false });
+        if (state.condition) renderCurrentView(state.condition);
       }
     }
 
@@ -625,26 +708,41 @@ function setStatus(message) {
 
     function buildActivityMessage(condition, activity) {
       if (!activity || !activity.isHomeschool) return "";
-      if (activity.slug === "snorkel-dive") return buildSnorkelMessage(condition);
+      if (activity.slug === "dive") return buildSnorkelMessage(condition);
       return buildTidepoolMessage(condition);
     }
 
     function renderActivityView(condition) {
       const activity = state.selectedActivity;
       if (!activity) return;
-      const rating = condition.ratings[activity.ratingKey];
       const catalog = buildReportCatalog(condition);
+      const featured = catalog[activity.featuredKey];
       const modules = activity.reportKeys.map((key) => catalog[key]).filter(Boolean);
 
       el.overviewReports.innerHTML = "";
 
       el.activityTitle.textContent = `${activity.title} at ${condition.place.name}`;
       el.activityIntro.textContent = activity.intro;
-      el.activityHighlights.innerHTML = [
-        { label: "Recommendation", value: rating.label, note: rating.reason },
-        { label: "Best timing", value: activity.slug === "tide-pools" ? tideWindowAround(condition.tides.bestLow ? condition.tides.bestLow.time : null) : formatDate(fromYmd(condition.date)), note: activity.slug === "tide-pools" ? "Use the low-tide window as the anchor." : "Use the detailed modules below to narrow the best hour." },
-        { label: "Water quality", value: condition.waterQuality.label, note: "Always confirm the official county source before entering the water." }
-      ].map((card) => `
+
+      const reads = getActivityReads(condition, activity);
+      const highlights = reads.map((read) => ({
+        label: reads.length > 1 ? `Rating · ${read.shortName}` : "Recommendation",
+        value: read.rating.label,
+        note: read.rating.reason
+      }));
+      highlights.push(activity.slug === "tide-pools"
+        ? {
+            label: "Best timing",
+            value: tideWindowAround(condition.tides.bestLow ? condition.tides.bestLow.time : null),
+            note: "Anchor the trip on the low-tide window."
+          }
+        : {
+            label: "Water quality",
+            value: condition.waterQuality.label,
+            note: "Confirm the official county source before entering the water."
+          });
+
+      el.activityHighlights.innerHTML = highlights.map((card) => `
         <article class="metric-card">
           <p class="metric-label">${card.label}</p>
           <p class="metric-value">${card.value}</p>
@@ -652,7 +750,7 @@ function setStatus(message) {
         </article>
       `).join("");
 
-      renderModuleCards(el.activityReports, modules, true);
+      renderReports(el.activityReports, modules, featured);
 
       const message = buildActivityMessage(condition, activity);
       el.messageSection.hidden = !message;
@@ -665,17 +763,180 @@ function setStatus(message) {
       el.activityReports.innerHTML = "";
       el.messageSection.hidden = true;
       el.activityMessage.value = "";
-      renderModuleCards(el.overviewReports, overviewModules, false);
+      renderReports(el.overviewReports, overviewModules, null);
     }
 
     function renderCurrentView(condition) {
       destroyAllCharts();
       renderContextHeader(condition);
-      renderActivitySummaryStrip(condition);
+      if (state.currentView === "marine-life") {
+        updateContextBackground(condition);
+        renderMarineLife();
+        return;
+      }
+      renderContextStats(condition);
+      renderRatingsBar(condition);
+      renderWarnings(condition);
       updateContextBackground(condition);
       if (state.currentView === "activity") {
         renderActivityView(condition);
       } else {
         renderOverview(condition);
+      }
+    }
+
+    // --- Marine Life rendering ---------------------------------------------
+    function renderMarineWindowControl() {
+      if (!el.windowControl) return;
+      el.windowControl.innerHTML = MARINE_WINDOWS.map((w) => `
+        <button type="button" class="segment" data-window="${w.days}" aria-pressed="${w.days === state.marineWindowDays}">${w.label}</button>
+      `).join("");
+    }
+
+    function formatSightingDate(ymd) {
+      if (!ymd) return "—";
+      const parts = String(ymd).split("-").map(Number);
+      if (parts.length < 3 || parts.some(Number.isNaN)) return ymd;
+      return formatDate(fromYmd(`${ymd}`.slice(0, 10)));
+    }
+
+    function speciesCardHtml(sp) {
+      const photo = sp.photoUrl
+        ? `<img class="species-photo" src="${sp.photoUrl}" alt="${sp.commonName} (${sp.sciName})" loading="lazy" />`
+        : `<div class="species-photo species-photo-empty" role="img" aria-label="No photo available for ${sp.commonName}"></div>`;
+      const count = `${sp.count} sighting${sp.count === 1 ? "" : "s"}`;
+      return `
+        <article class="species-card" data-taxon="${sp.taxonId}" tabindex="0" aria-label="${sp.commonName}, ${count}">
+          <div class="species-photo-wrap">
+            ${photo}
+            ${sp.obscured ? `<span class="species-approx" title="Exact location obscured for a sensitive species">approx. location</span>` : ""}
+          </div>
+          <div class="species-meta">
+            <p class="species-name">${sp.commonName}</p>
+            <p class="species-sci">${sp.sciName}</p>
+            <p class="species-stats">${count} · last ${formatSightingDate(sp.lastSeen)}</p>
+            <a class="species-link" href="${sp.sourceUrl}" target="_blank" rel="noopener">View on iNaturalist &#8599;</a>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderMarineLife() {
+      renderMarineWindowControl();
+      const placeName = state.selectedPlace ? state.selectedPlace.name : "this place";
+
+      if (state.marineLoading) {
+        el.marineSummary.textContent = `Loading recent sightings near ${placeName}…`;
+        el.marineSpeciesList.innerHTML = `<p class="marine-empty">Loading recent sightings…</p>`;
+        return;
+      }
+
+      if (state.marineError) {
+        el.marineSummary.textContent = "Could not load sightings.";
+        el.marineSpeciesList.innerHTML = `<p class="availability-note">iNaturalist data could not be loaded right now. Check your connection and try again.</p>`;
+        if (typeof clearMarineMarkers === "function") clearMarineMarkers();
+        return;
+      }
+
+      const data = state.marine;
+      const species = data ? data.species : [];
+
+      if (!species.length) {
+        el.marineSummary.textContent = `No marine life sightings found near ${placeName} in the last ${state.marineWindowDays} days.`;
+        el.marineSpeciesList.innerHTML = `<p class="marine-empty">No recent sightings in this window. Try widening the recent window to 90 days or 1 year.</p>`;
+        if (typeof clearMarineMarkers === "function") clearMarineMarkers();
+        return;
+      }
+
+      el.marineSummary.innerHTML = `<strong>${species.length}</strong> species · <strong>${data.sightings.length}</strong> mapped sightings within ${MARINE_RADIUS_KM} km · last ${state.marineWindowDays} days`;
+      el.marineSpeciesList.innerHTML = species.map(speciesCardHtml).join("");
+      if (typeof renderMarineMarkers === "function") renderMarineMarkers(data.sightings);
+
+      // Honor a deep-linked or still-open species selection now that data exists.
+      const pending = state.pendingSpecies || state.selectedSpecies;
+      if (pending) {
+        const match = species.find((sp) => String(sp.taxonId) === String(pending));
+        state.pendingSpecies = null;
+        if (match) {
+          openSpeciesPanel(match.taxonId, { updateUrl: false, focusPanel: false });
+        } else {
+          closeSpeciesPanel({ updateUrl: false });
+        }
+      }
+    }
+
+    function getSpeciesByTaxon(taxonId) {
+      const species = state.marine ? state.marine.species : [];
+      return species.find((sp) => String(sp.taxonId) === String(taxonId)) || null;
+    }
+
+    function renderSpeciesDetail(sp) {
+      const photo = sp.photoUrl
+        ? `<img class="species-detail-photo-img" src="${sp.photoUrl}" alt="${sp.commonName} (${sp.sciName})" />`
+        : `<div class="species-detail-photo-img species-photo-empty" role="img" aria-label="No photo available for ${sp.commonName}"></div>`;
+      const rows = [
+        ["Recent sightings", `${sp.count}`],
+        ["Most recent", formatSightingDate(sp.lastSeen)],
+        sp.iconicTaxon ? ["Group", sp.iconicTaxon] : null,
+        ["Location", sp.obscured ? "Approximate (obscured)" : "Exact"]
+      ].filter(Boolean);
+
+      el.speciesPanelContent.innerHTML = `
+        <div class="species-detail">
+          <div class="species-detail-photo">${photo}</div>
+          <p class="eyebrow">Marine Life</p>
+          <h2 id="speciesPanelName">${sp.commonName}</h2>
+          <p class="species-detail-sci">${sp.sciName}</p>
+          <dl class="species-detail-stats">
+            ${rows.map(([dt, dd]) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`).join("")}
+          </dl>
+          <a class="primary species-detail-link" href="${sp.sourceUrl}" target="_blank" rel="noopener">View record on iNaturalist &#8599;</a>
+          <p class="small-note">Source: iNaturalist community observations. Identifications are community-sourced; obscured locations are approximate.</p>
+        </div>
+      `;
+    }
+
+    // Open the in-app detail panel for a species. `updateUrl` keeps the
+    // ?species= deep link in sync; `focusPanel` moves focus into the dialog.
+    function openSpeciesPanel(taxonId, options) {
+      const opts = options || {};
+      const sp = getSpeciesByTaxon(taxonId);
+      if (!sp) return;
+
+      state.selectedSpecies = sp.taxonId;
+      if (opts.trigger) state.speciesPanelTrigger = opts.trigger;
+
+      renderSpeciesDetail(sp);
+      el.speciesPanel.hidden = false;
+      document.body.classList.add("species-panel-open");
+
+      if (typeof focusSpeciesOnMap === "function") focusSpeciesOnMap(sp.taxonId);
+
+      if (opts.updateUrl !== false) {
+        history.replaceState(null, "", `#/marine-life?species=${encodeURIComponent(sp.taxonId)}`);
+      }
+      if (opts.focusPanel !== false) {
+        const closeBtn = el.speciesPanel.querySelector(".species-panel-close");
+        if (closeBtn) closeBtn.focus();
+      }
+    }
+
+    function closeSpeciesPanel(options) {
+      const opts = options || {};
+      if (el.speciesPanel.hidden) return;
+      el.speciesPanel.hidden = true;
+      document.body.classList.remove("species-panel-open");
+      state.selectedSpecies = null;
+
+      if (opts.updateUrl !== false) {
+        history.replaceState(null, "", "#/marine-life");
+      }
+
+      const trigger = state.speciesPanelTrigger;
+      state.speciesPanelTrigger = null;
+      if (trigger && document.contains(trigger)) {
+        trigger.focus();
+      } else if (el.marineSummary) {
+        el.marineSummary.focus();
       }
     }

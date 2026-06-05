@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css?v=1.9.4" />
-  <link rel="stylesheet" href="./assets/styles/main.css?v=20260604c" />
+  <link rel="stylesheet" href="./assets/styles/main.css?v=20260604e" />
 </head>
 <body>
   <div class="page-shell">
@@ -20,9 +20,13 @@
       </div>
       <section class="filter-panel" aria-label="Forecast filters">
         <div class="filter-grid">
-          <div class="field">
+          <div class="field" id="dateField">
             <label for="dateInput">Forecast day</label>
             <select id="dateInput" aria-label="Select a forecast day"></select>
+          </div>
+          <div class="field" id="windowField">
+            <label for="windowControl">Recent window</label>
+            <div id="windowControl" class="segmented" role="group" aria-label="Recent sighting window"></div>
           </div>
           <div class="field">
             <label for="zoneSelect">Location</label>
@@ -32,7 +36,7 @@
             <label for="placeSelect">Place</label>
             <select id="placeSelect" aria-label="Select a place"></select>
           </div>
-          <div class="field field-action">
+          <div class="field field-action" id="refreshField">
             <button id="updateBtn" class="primary" type="button">Refresh forecast</button>
           </div>
         </div>
@@ -41,6 +45,11 @@
 
     <div class="workspace">
       <nav class="left-rail panel" aria-label="Planner views and activities">
+        <div class="nav-group">
+          <p class="eyebrow">Views</p>
+          <a id="overviewNavLink" class="nav-link" href="#/">Overview</a>
+          <a id="marineLifeNavLink" class="nav-link" href="#/marine-life">Marine Life</a>
+        </div>
         <div class="nav-group">
           <p class="eyebrow">Activities</p>
           <div id="activityNavLinks"></div>
@@ -54,26 +63,17 @@
             <div class="context-header">
               <p id="viewEyebrow" class="eyebrow">Overview</p>
               <h2 id="viewTitle">Loading latest conditions...</h2>
-              <p id="viewDescription" class="subtitle-small">Forecast and activity guidance will appear after the first update finishes.</p>
+              <div id="contextStats" class="context-stats" aria-label="Key conditions"></div>
             </div>
             <p id="contextCredit" class="context-credit"></p>
 
-            <div id="summaryStripWrap" class="summary-strip" data-open="false">
-              <div id="activitySummaryStrip" class="summary-strip-body metric-grid" aria-hidden="true"></div>
-              <button id="summaryStripToggle" type="button" class="summary-strip-toggle" aria-expanded="false" aria-controls="activitySummaryStrip">
-                <span class="summary-strip-toggle-label">Activity ratings</span>
-                <span class="summary-strip-toggle-icon" aria-hidden="true"></span>
-              </button>
+            <div id="ratingsBar" class="ratings-bar" aria-label="Activity ratings">
+              <div id="activityRatings" class="ratings-bar-body"></div>
             </div>
           </div>
         </section>
 
-        <section id="summarySection" class="panel" aria-label="Daily summary">
-          <h2>Daily Summary</h2>
-          <p id="summaryLead" class="summary-lead">Choose a forecast day and location, then refresh the planner.</p>
-          <p id="summaryMeta" class="meta"></p>
-          <ul id="warningList" class="warning-list"></ul>
-        </section>
+        <div id="warningBand" class="warning-band" role="status" aria-live="polite" hidden></div>
 
         <section id="overviewView" class="view-stack" aria-label="Overview reports">
           <div id="overviewReports" class="module-grid"></div>
@@ -81,7 +81,7 @@
             <details>
               <summary>Custom location map</summary>
               <div id="map" role="application" aria-label="Interactive map for selecting a place"></div>
-              <p class="small-note">Click a saved marker or click anywhere on the map to create a custom place. This tool is secondary to the location filters, but it remains available when you need a custom point.</p>
+              <p class="small-note">Click a marker, or click anywhere on the map to drop a custom point.</p>
             </details>
           </section>
         </section>
@@ -106,15 +106,35 @@
           <div id="activityReports" class="module-grid"></div>
         </section>
 
+        <section id="marineLifeView" class="view-stack marine-life" aria-label="Marine life near the selected place" hidden>
+          <section class="panel marine-summary-panel">
+            <p id="marineSummary" class="marine-summary" role="status" aria-live="polite" tabindex="-1"></p>
+            <p class="small-note">Recent community sightings near the selected place. Aggregated by species; counts reflect a single recent page of observations, not all-time totals.</p>
+          </section>
+          <section class="panel marine-map-panel" aria-label="Recent sightings map">
+            <div id="marineMap" role="application" aria-label="Map of recent marine life sightings"></div>
+            <p class="small-note">Coral points are recent sightings. Faded, dashed points mark species whose exact location is obscured by iNaturalist.</p>
+          </section>
+          <section class="panel marine-list-panel" aria-label="Species seen recently">
+            <div id="marineSpeciesList" class="marine-species-grid"></div>
+          </section>
+
+          <div id="speciesPanel" class="species-panel" role="dialog" aria-modal="true" aria-labelledby="speciesPanelName" hidden>
+            <div class="species-panel-backdrop" data-close></div>
+            <div class="species-panel-body">
+              <button type="button" class="species-panel-close" data-close aria-label="Close species detail">&times;</button>
+              <div id="speciesPanelContent"></div>
+            </div>
+          </div>
+        </section>
+
         <footer class="panel footer-panel" aria-label="Safety and official links">
-          <h2>Safety And Official Sources</h2>
-          <ul class="source-list">
-            <li><a href="https://api.tidesandcurrents.noaa.gov/api/prod/" target="_blank" rel="noopener">NOAA CO-OPS Tide API</a></li>
-            <li><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo Forecast API</a> and <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine API</a></li>
-            <li><a href="https://www.sdbeachinfo.com/" target="_blank" rel="noopener">San Diego County Beach And Bay Water Quality</a></li>
-            <li><a href="https://www.weather.gov/" target="_blank" rel="noopener">National Weather Service Forecasts And Alerts</a></li>
-          </ul>
-          <p class="small-note">This planner supports decisions for families and groups. It does not replace lifeguards, posted warnings, closures, or official safety guidance.</p>
+          <p class="small-note">Planning aid only — not a substitute for lifeguards, posted warnings, or official guidance. Sources:
+            <a href="https://api.tidesandcurrents.noaa.gov/api/prod/" target="_blank" rel="noopener">NOAA tides</a>,
+            <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo</a>,
+            <a href="https://www.sdbeachinfo.com/" target="_blank" rel="noopener">SD water quality</a>,
+            <a href="https://www.weather.gov/" target="_blank" rel="noopener">NWS</a>.
+          </p>
         </footer>
       </main>
     </div>
@@ -122,13 +142,13 @@
 
   <script src="./assets/vendor/leaflet/leaflet.js?v=1.9.4"></script>
   <script src="./assets/vendor/chartjs/chart.umd.js?v=4.4.3"></script>
-  <script src="./assets/scripts/config.js?v=20260604b"></script>
+  <script src="./assets/scripts/config.js?v=20260604e"></script>
   <script src="./assets/scripts/utils.js?v=20260604b"></script>
-  <script src="./assets/scripts/api.js?v=20260604b"></script>
+  <script src="./assets/scripts/api.js?v=20260604e"></script>
   <script src="./assets/scripts/scoring.js?v=20260604b"></script>
-  <script src="./assets/scripts/render.js?v=20260604b"></script>
-  <script src="./assets/scripts/map.js?v=20260604b"></script>
-  <script src="./assets/scripts/app.js?v=20260604b"></script>
+  <script src="./assets/scripts/render.js?v=20260604e"></script>
+  <script src="./assets/scripts/map.js?v=20260604e"></script>
+  <script src="./assets/scripts/app.js?v=20260604e"></script>
   <script src="./assets/scripts/bootstrap.js?v=20260604b"></script>
 </body>
 </html>

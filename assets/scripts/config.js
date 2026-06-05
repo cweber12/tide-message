@@ -3,7 +3,25 @@ const NOAA_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
     const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
     const MARINE_URL = "https://marine-api.open-meteo.com/v1/marine";
     const OPENVERSE_URL = "https://api.openverse.org/v1/images/";
+    const INATURALIST_URL = "https://api.inaturalist.org/v1/observations";
     const TZ = "America/Los_Angeles";
+
+    // Marine Life view config. Geographic radius (km) around the selected place
+    // for sightings, and the recent-window options shown in the segmented
+    // control. Sightings are historical/recent, so there is no forecast day.
+    const MARINE_RADIUS_KM = 20;
+    const MARINE_PER_PAGE = 200;
+    const MARINE_WINDOWS = [
+      { days: 30, label: "30 days" },
+      { days: 90, label: "90 days" },
+      { days: 365, label: "1 year" }
+    ];
+
+    // iNaturalist iconic/high-level taxon IDs used to bias results toward marine
+    // and intertidal life. These are tunable: widen or trim as San Diego results
+    // suggest. (Ray-finned fishes, sharks/rays, molluscs, cnidarians, echinoderms,
+    // malacostracans/crabs, cetaceans, pinnipeds, sea turtles.)
+    const MARINE_TAXON_IDS = [47178, 47273, 47115, 47534, 47549, 85493, 152871, 152870, 39532];
 
     const TIDE_STATIONS = {
       sanDiego: { id: "9410170", name: "San Diego, CA", lat: 32.7157, lon: -117.1611 },
@@ -129,62 +147,80 @@ const NOAA_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
       }
     ];
 
+    // Each activity declares a single featured report (rendered full-width) and a
+    // grid of supporting reports, plus the stat keys shown in the photo overlay.
+    // `ratingReads` lets one view surface multiple scores (Surf = beginner + energy).
     const ACTIVITIES = [
       {
         slug: "tide-pools",
         navLabel: "Tide Pools",
-        title: "Tide Pools / Homeschool",
+        title: "Tide Pools",
         ratingKey: "tidePools",
-        reportKeys: ["tide", "marine", "weather"],
+        featuredKey: "tide",
+        reportKeys: ["marine", "weather"],
+        statKeys: ["lowTide", "wave", "wind", "rain"],
         isHomeschool: true,
-        intro: "Low tide timing matters most here. Use marine and weather detail to confirm whether that window is worth the trip."
+        intro: "Low tide timing is the make-or-break signal. Marine and weather confirm whether the window is worth the trip."
       },
       {
         slug: "beach-day",
         navLabel: "Beach Day",
-        title: "Family Beach Day",
+        title: "Beach Day",
         ratingKey: "beachDay",
-        reportKeys: ["weather", "wind", "marine"],
+        featuredKey: "weather",
+        reportKeys: ["wind", "marine"],
+        statKeys: ["temp", "wind", "rain", "wave"],
         isHomeschool: false,
-        intro: "Comfort, wind, and light surf conditions drive whether a family beach outing will feel easy or annoying."
+        intro: "Comfort, wind, and light surf decide whether a family beach outing feels easy or annoying."
       },
       {
-        slug: "kids-surf",
-        navLabel: "Kids Surf",
-        title: "Kids / Beginner Surf",
-        ratingKey: "kidsSurf",
-        reportKeys: ["marine", "wind", "weather"],
+        slug: "surf",
+        navLabel: "Surf",
+        title: "Surf",
+        ratingReads: [
+          { key: "kidsSurf", label: "Beginner" },
+          { key: "adultSurf", label: "Energy" }
+        ],
+        featuredKey: "marine",
+        reportKeys: ["wind", "weather"],
+        statKeys: ["wave", "swell", "wind", "rain"],
         isHomeschool: false,
-        intro: "For beginner surf, cleaner small waves and manageable wind matter more than broad all-day summaries."
+        intro: "Wave energy and wind drive the call. Read two ways: a beginner-friendly window and an overall energy read."
       },
       {
-        slug: "adult-surf",
-        navLabel: "Adult Surf",
-        title: "Adult Surf",
-        ratingKey: "adultSurf",
-        reportKeys: ["marine", "wind", "weather"],
-        isHomeschool: false,
-        intro: "This view emphasizes wave energy and wind so surf decisions are separated from family-oriented planning."
-      },
-      {
-        slug: "snorkel-dive",
-        navLabel: "Snorkel / Dive",
-        title: "Snorkel / Dive",
+        slug: "dive",
+        navLabel: "Dive",
+        title: "Dive",
         ratingKey: "snorkelDive",
-        reportKeys: ["marine", "tide", "wind", "waterTemp"],
+        featuredKey: "marine",
+        reportKeys: ["tide", "wind", "waterTemp"],
+        statKeys: ["wave", "wind", "waterTemp", "lowTide"],
         isHomeschool: true,
-        intro: "Snorkel and dive windows depend on calm marine conditions first, with tide, wind, and water temperature used as supporting context."
+        intro: "Calm marine conditions come first; tide, wind, and water temperature add supporting context."
       },
       {
         slug: "paddle",
-        navLabel: "Kayak / SUP",
-        title: "Kayak / SUP",
+        navLabel: "Paddle",
+        title: "Paddle",
         ratingKey: "paddle",
-        reportKeys: ["wind", "marine", "weather"],
+        featuredKey: "wind",
+        reportKeys: ["marine", "weather"],
+        statKeys: ["wind", "wave", "rain", "lowTide"],
         isHomeschool: false,
-        intro: "This view focuses on wind, gusts, and surface conditions so paddling decisions are easier to trust."
+        intro: "Wind and gusts decide go/no-go; surface conditions and weather refine the timing."
       }
     ];
+
+    // Stats shown in the photo overlay on the Overview (non-activity) view.
+    const OVERVIEW_STATS = ["lowTide", "wave", "wind", "rain"];
+
+    // Local photography for the context panel, keyed by place id. When a place
+    // has an entry here it is used directly instead of the Openverse lookup.
+    const PLACE_IMAGES = {
+      "la-jolla-shores": "./assets/la_jolla_shores.jpg",
+      "la-jolla-cove": "./assets/la_jolla_cove.jpg",
+      "scripps-pier": "./assets/scripps_pier.jpg"
+    };
 
     const DEFAULT_LOCATION_ID = "la-jolla";
 

@@ -20,6 +20,111 @@ async function fetchJson(url) {
       }
     }
 
+    // --- Marine Life (iNaturalist) -----------------------------------------
+    // Pull a single page of recent observations within a radius of the place and
+    // normalize into species (aggregated by taxon) plus individual sightings for
+    // the map. Keyless, CORS-enabled endpoint; one network call covers both the
+    // species list and map markers.
+    function parseInatLocation(obs) {
+      if (obs.geojson && Array.isArray(obs.geojson.coordinates)) {
+        const [lon, lat] = obs.geojson.coordinates;
+        if (Number.isFinite(lat) && Number.isFinite(lon)) return { lat, lon };
+      }
+      if (typeof obs.location === "string" && obs.location.includes(",")) {
+        const [lat, lon] = obs.location.split(",").map(Number);
+        if (Number.isFinite(lat) && Number.isFinite(lon)) return { lat, lon };
+      }
+      return null;
+    }
+
+    function inatPhotoUrl(obs) {
+      const photo = obs.photos && obs.photos[0];
+      const url = photo && (photo.url || (photo.photo && photo.photo.url));
+      // Default photo URLs are the 75px "square" crop; request the medium size.
+      return url ? url.replace("/square.", "/medium.") : "";
+    }
+
+    function isInatObscured(obs) {
+      return obs.geoprivacy === "obscured"
+        || obs.taxon_geoprivacy === "obscured"
+        || obs.obscured === true;
+    }
+
+    async function fetchMarineLifeSightings(place, windowDays) {
+      const since = toYmd(addDays(new Date(), -Math.max(1, windowDays)));
+      const params = new URLSearchParams({
+        lat: String(place.lat),
+        lng: String(place.lon),
+        radius: String(MARINE_RADIUS_KM),
+        d1: since,
+        taxon_id: MARINE_TAXON_IDS.join(","),
+        photos: "true",
+        geo: "true",
+        order_by: "observed_on",
+        order: "desc",
+        per_page: String(MARINE_PER_PAGE),
+        locale: "en"
+      });
+
+      const json = await fetchJson(`${INATURALIST_URL}?${params.toString()}`);
+      const results = Array.isArray(json.results) ? json.results : [];
+
+      const sightings = [];
+      const speciesMap = new Map();
+
+      results.forEach((obs) => {
+        const taxon = obs.taxon;
+        if (!taxon || !taxon.id) return;
+
+        const coords = parseInatLocation(obs);
+        const obscured = isInatObscured(obs);
+        const observedOn = obs.observed_on
+          || (obs.observed_on_details && obs.observed_on_details.date)
+          || null;
+        const photoUrl = inatPhotoUrl(obs);
+
+        if (coords) {
+          sightings.push({
+            id: obs.id,
+            taxonId: taxon.id,
+            commonName: taxon.preferred_common_name || taxon.name || "Unknown species",
+            lat: coords.lat,
+            lon: coords.lon,
+            obscured,
+            observedOn,
+            sourceUrl: obs.uri || `https://www.inaturalist.org/observations/${obs.id}`
+          });
+        }
+
+        const existing = speciesMap.get(taxon.id);
+        if (existing) {
+          existing.count += 1;
+          if (!existing.photoUrl && photoUrl) existing.photoUrl = photoUrl;
+          if (observedOn && (!existing.lastSeen || observedOn > existing.lastSeen)) {
+            existing.lastSeen = observedOn;
+          }
+          existing.obscured = existing.obscured || obscured;
+        } else {
+          speciesMap.set(taxon.id, {
+            taxonId: taxon.id,
+            commonName: taxon.preferred_common_name || taxon.name || "Unknown species",
+            sciName: taxon.name || "",
+            iconicTaxon: taxon.iconic_taxon_name || "",
+            photoUrl: photoUrl || (taxon.default_photo && taxon.default_photo.medium_url) || "",
+            count: 1,
+            lastSeen: observedOn,
+            obscured,
+            sourceUrl: `https://www.inaturalist.org/taxa/${taxon.id}`
+          });
+        }
+      });
+
+      const species = Array.from(speciesMap.values()).sort((a, b) =>
+        b.count - a.count || String(b.lastSeen || "").localeCompare(String(a.lastSeen || "")));
+
+      return { place, windowDays, since, species, sightings, totalSightings: results.length };
+    }
+
     async function fetchTideSeries(stationId, beginNoDash, endNoDash) {
       const params = new URLSearchParams({
         product: "predictions",

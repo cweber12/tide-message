@@ -1,0 +1,138 @@
+/* Design Tokens: Marine Life (additive slice)
+   Philosophy: Functional Swiss-Editorial — "editorial frame, photos add warmth"
+   Derived from the LIVE token system in assets/styles/main.css (flat surfaces,
+   square corners, no ambient shadow, 4px-base spacing, short aliases like
+   --ink / --brand / --line / --surface).
+
+   These are NEW, namespaced (--ml-*) tokens for the Marine Life view only.
+   They are additive: paste the :root block into the existing main.css :root,
+   and add the dark blocks when/if a theme toggle ships (main.css is light-only
+   today; the reference .design DESIGN_TOKENS.css already defines a dark palette).
+
+   Deliberate deviations from the flat base system, each justified:
+   - Map markers and the species detail panel carry a small shadow. They float
+     over photographic map tiles / page content and need depth to read as
+     "above." The flat, shadowless rule applies to in-flow panels, not overlays.
+   - Species cards use --radius-sm (8px), not the 0px square of shell panels.
+     Softer corners read as photo media, not data modules.
+*/
+
+:root {
+  /* --- Data layer colors -------------------------------------------------
+     Three mutually distinct hues for map markers/lines + legend swatches.
+     Chosen to stay clear of the status palette (good=green, warn=gold,
+     error=red) so a sighting is never confused with a rating. */
+  --ml-layer-sightings: #c2562e;        /* iNaturalist — warm coral-rust ("life") */
+  --ml-layer-distribution: #0b5f8a;     /* OBIS — brand teal ("historical / cool") */
+  --ml-layer-tracks: #6a4a9c;           /* ATN tagged tracks — violet (distinct) */
+
+  --ml-layer-sightings-soft: rgba(194, 86, 46, 0.18);   /* halos / cluster fills */
+  --ml-layer-distribution-soft: rgba(11, 95, 138, 0.16);
+  --ml-layer-tracks-soft: rgba(106, 74, 156, 0.18);     /* track corridor fill */
+
+  /* --- Map markers -------------------------------------------------------- */
+  --ml-marker-ring: #ffffff;            /* contrast ring on any tile */
+  --ml-marker-shadow: 0 1px 4px rgba(8, 20, 30, 0.45);  /* depth over imagery */
+  --ml-marker-size: 14px;
+  --ml-marker-size-active: 20px;        /* selected / hovered marker */
+  /* Obscured / sensitive species: approximate location treatment */
+  --ml-marker-approx-fill: rgba(194, 86, 46, 0.28);
+  --ml-marker-approx-stroke: #c2562e;   /* paired with a dashed stroke in CSS */
+
+  /* --- Species card ------------------------------------------------------- */
+  --ml-card-surface: var(--surface);
+  --ml-card-border: var(--line);
+  --ml-card-hover-border: var(--brand);
+  --ml-card-radius: var(--radius-sm);   /* 8px — photo media, softer than shell */
+  --ml-card-photo-ratio: 4 / 3;
+  --ml-card-photo-placeholder: var(--surface-alt);  /* OBIS / photo-less species */
+  /* Caption scrim so common+scientific name stays legible over any photo */
+  --ml-card-scrim: linear-gradient(180deg, rgba(8, 16, 24, 0) 38%, rgba(8, 16, 24, 0.74) 100%);
+  --ml-card-name: var(--ink);
+  --ml-card-sciname: var(--muted);      /* render italic in CSS */
+  --ml-card-meta: #5b6b7a;              /* count + most-recent date */
+
+  /* --- Species detail panel (overlay) ------------------------------------ */
+  --ml-panel-surface: var(--surface);
+  --ml-panel-border: var(--line);
+  --ml-panel-backdrop: rgba(16, 28, 40, 0.44);          /* mobile full-screen scrim */
+  --ml-panel-shadow: 0 12px 40px rgba(12, 26, 38, 0.22); /* docked side panel depth */
+  --ml-panel-width: 380px;              /* desktop docked width */
+  --ml-panel-radius: 0;                 /* docked panel stays square w/ shell */
+
+  /* --- Recent-window segmented control ----------------------------------- */
+  --ml-segment-bg: var(--surface-alt);
+  --ml-segment-text: var(--muted);
+  --ml-segment-active-bg: var(--brand);
+  --ml-segment-active-text: #ffffff;
+  --ml-segment-radius: var(--radius-sm);
+
+  /* --- Marine Life accent + summary -------------------------------------- */
+  --ml-accent-warm: #c2562e;            /* eyebrow / active layer tint; ties to sightings */
+  --ml-summary-bg: var(--surface-alt);  /* "N species · M sightings" chip strip */
+  --ml-summary-text: var(--ink);
+
+  /* --- Layout ------------------------------------------------------------- */
+  --ml-map-height: 420px;
+  --ml-map-height-mobile: 260px;
+  --ml-grid-gap: var(--space-5);        /* 24px between cards */
+  --ml-list-card-min: 220px;            /* auto-fill grid min column */
+}
+
+/* ============================================================================
+   DARK MODE
+   main.css ships light-only today; include these so Marine Life is ready the
+   moment a [data-theme="dark"] toggle (or system-preference) lands. Layer hues
+   are lightened for contrast on dark tiles/UI; markers/panel shadows deepen.
+   ========================================================================== */
+[data-theme="dark"] {
+  --ml-layer-sightings: #e8895f;
+  --ml-layer-distribution: #5fb2dd;
+  --ml-layer-tracks: #a98fd6;
+
+  --ml-layer-sightings-soft: rgba(232, 137, 95, 0.22);
+  --ml-layer-distribution-soft: rgba(95, 178, 221, 0.20);
+  --ml-layer-tracks-soft: rgba(169, 143, 214, 0.22);
+
+  --ml-marker-ring: #0c1620;            /* dark ring reads on light markers */
+  --ml-marker-shadow: 0 1px 4px rgba(0, 8, 15, 0.6);
+  --ml-marker-approx-fill: rgba(232, 137, 95, 0.30);
+  --ml-marker-approx-stroke: #e8895f;
+
+  --ml-card-meta: #93a3b3;
+  --ml-card-scrim: linear-gradient(180deg, rgba(2, 8, 14, 0) 34%, rgba(2, 8, 14, 0.8) 100%);
+
+  --ml-panel-backdrop: rgba(0, 8, 16, 0.56);
+  --ml-panel-shadow: 0 14px 44px rgba(0, 8, 15, 0.55);
+
+  --ml-segment-active-text: #0c1620;    /* dark text on light-blue brand in dark mode */
+
+  --ml-accent-warm: #e8895f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ml-layer-sightings: #e8895f;
+    --ml-layer-distribution: #5fb2dd;
+    --ml-layer-tracks: #a98fd6;
+
+    --ml-layer-sightings-soft: rgba(232, 137, 95, 0.22);
+    --ml-layer-distribution-soft: rgba(95, 178, 221, 0.20);
+    --ml-layer-tracks-soft: rgba(169, 143, 214, 0.22);
+
+    --ml-marker-ring: #0c1620;
+    --ml-marker-shadow: 0 1px 4px rgba(0, 8, 15, 0.6);
+    --ml-marker-approx-fill: rgba(232, 137, 95, 0.30);
+    --ml-marker-approx-stroke: #e8895f;
+
+    --ml-card-meta: #93a3b3;
+    --ml-card-scrim: linear-gradient(180deg, rgba(2, 8, 14, 0) 34%, rgba(2, 8, 14, 0.8) 100%);
+
+    --ml-panel-backdrop: rgba(0, 8, 16, 0.56);
+    --ml-panel-shadow: 0 14px 44px rgba(0, 8, 15, 0.55);
+
+    --ml-segment-active-text: #0c1620;
+
+    --ml-accent-warm: #e8895f;
+  }
+}

@@ -33,6 +33,74 @@ function focusMarkerForPlace(place) {
       focusMarkerForPlace(place);
     }
 
+    // --- Marine Life map ----------------------------------------------------
+    // A dedicated Leaflet instance for the Marine Life view, kept separate from
+    // the Overview custom-location map so the two never fight over one DOM node.
+    function mlColor(varName, fallback) {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      return value || fallback;
+    }
+
+    function initMarineMap() {
+      if (state.marineMap || typeof window.L === "undefined") return;
+      const mapEl = document.getElementById("marineMap");
+      if (!mapEl) return;
+
+      const center = state.selectedPlace || PLACES[0];
+      state.marineMap = L.map("marineMap").setView([center.lat, center.lon], 11);
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+      }).addTo(state.marineMap);
+      state.marineMarkers = L.layerGroup().addTo(state.marineMap);
+    }
+
+    function clearMarineMarkers() {
+      if (state.marineMarkers) state.marineMarkers.clearLayers();
+      state.marineMarkerByTaxon = new Map();
+    }
+
+    function renderMarineMarkers(sightings) {
+      if (!state.marineMap) initMarineMap();
+      if (!state.marineMap) return;
+
+      const center = state.selectedPlace || PLACES[0];
+      state.marineMap.setView([center.lat, center.lon], 11, { animate: false });
+      clearMarineMarkers();
+      // The container may have just become visible; recompute its size.
+      setTimeout(() => state.marineMap.invalidateSize(), 0);
+
+      const fill = mlColor("--ml-layer-sightings", "#c2562e");
+
+      (sightings || []).forEach((s) => {
+        const marker = L.circleMarker([s.lat, s.lon], {
+          radius: s.obscured ? 8 : 5,
+          color: "#ffffff",
+          weight: 1.5,
+          fillColor: fill,
+          fillOpacity: s.obscured ? 0.35 : 0.9,
+          dashArray: s.obscured ? "3" : null
+        });
+        marker.bindTooltip(s.commonName + (s.obscured ? " (approx.)" : ""));
+        marker.on("click", () => {
+          if (typeof openSpeciesPanel === "function") openSpeciesPanel(s.taxonId);
+        });
+        state.marineMarkers.addLayer(marker);
+
+        if (!state.marineMarkerByTaxon.has(s.taxonId)) {
+          state.marineMarkerByTaxon.set(s.taxonId, marker);
+        }
+      });
+    }
+
+    function focusSpeciesOnMap(taxonId) {
+      if (!state.marineMap || !state.marineMarkerByTaxon) return;
+      const marker = state.marineMarkerByTaxon.get(Number(taxonId));
+      if (!marker) return;
+      state.marineMap.setView(marker.getLatLng(), 13, { animate: true });
+      marker.openPopup();
+    }
+
     function initMap() {
       if (typeof window.L === "undefined") {
         const mapEl = document.getElementById("map");
@@ -72,6 +140,15 @@ function focusMarkerForPlace(place) {
         setSelectedPlace(custom, true);
         await refreshPlanner();
       });
+
+      const mapDetails = document.querySelector(".map-panel details");
+      if (mapDetails) {
+        mapDetails.addEventListener("toggle", () => {
+          if (mapDetails.open) {
+            setTimeout(() => state.map.invalidateSize(), 0);
+          }
+        });
+      }
 
       setTimeout(() => {
         state.map.invalidateSize();
